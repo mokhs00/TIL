@@ -33,3 +33,7 @@ a노드에서 c노드로 가는 비용의 최소값 = min(a노드에서 바로 c
 
 https://github.com/mokhs00/CodingTest/blob/b662d7a15d2ab3ca9bab26c11aa3f81ac8171331/src/main/java/Algorithm/FloydWarshall.java
 
+
+# 중요
+- 최단 경로 알고리즘은 간선의 가중치가 모두 음수가 아닐 때만 사용할 수 있다.
+- 간선의 가중치 중 음수가 존재할 경우 무한 사이클을 돌게 되므로 주의하자
