@@ -25,4 +25,4 @@
 
 # 구현 코드
 
-https://github.com/mokhs00/CodingTest/blob/6711cd3440234acfdbc5a452e2f96527f8c3d62e/src/main/java/Algorithm/DP_%ED%94%BC%EB%B3%B4%EB%82%98%EC%B9%98%EC%88%98%EC%97%B4.java
+https://github.com/mokhs00/CodingTest/blob/master/src/main/java/Algorithm/DP_%ED%94%BC%EB%B3%B4%EB%82%98%EC%B9%98%EC%88%98%EC%97%B4.java

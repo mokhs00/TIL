@@ -17,23 +17,24 @@
 ### 이는 [다이나믹 프로그래밍](https://github.com/mokhs00/TIL/blob/main/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98/%EB%8B%A4%EC%9D%B4%EB%82%98%EB%AF%B9%20%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%98%EB%B0%8D(DP).md)에도 속한다
 위 과정을 정리해보면 아래와 같은 점화식을 얻을 수 있음
  
-a노드에서 c노드로 가는 비용의 최소값 = min(a노드에서 바로 c노드로 가는 비용, a노드에서 b노드를 거쳐 c노드로 가는 비용)
+a노드에서 b노드로 가는 비용의 최소값 = min(a노드에서 바로 b노드로 가는 비용, a노드에서 c노드를 거쳐 b노드로 가는 비용)
  
-> **dp[a][c] = min(dp[a][c], dp[a][b] + dp[b][c])**
+> **dp[a][b] = min(dp[a][b], dp[a][c] + dp[c][b])**
 
 # 구현
 
 - graph를 INF(연결되어 있지 않음)으로 채운다.
 - graph에 각 노드 간 연결 정보와 비용을 기록한다.
 - 3중 반복문을 돌린다(현재노드 a, 다음노드 b, 거쳐갈 노드 c)
-- 매 순간 dp[a][c] = min(dp[a][c], dp[a][b] + dp[b][c])를 수행한다.
+- 매 순간 dp[a][b] = min(dp[a][b], dp[a][c] + dp[c][b])를 수행한다.
 
 
 # 구현 코드
 
-https://github.com/mokhs00/CodingTest/blob/b662d7a15d2ab3ca9bab26c11aa3f81ac8171331/src/main/java/Algorithm/FloydWarshall.java
+https://github.com/mokhs00/CodingTest/blob/master/src/main/java/Algorithm/FloydWarshall.java
 
 
 # 중요
 - 최단 경로 알고리즘은 간선의 가중치가 모두 음수가 아닐 때만 사용할 수 있다.
 - 간선의 가중치 중 음수가 존재할 경우 무한 사이클을 돌게 되므로 주의하자
+- 노드의 수가 100개 정도일 때 사용하는 것이 적합하다.

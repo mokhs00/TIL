@@ -23,4 +23,4 @@
 
 # 중요
 구현 2번 과정에서 각 노드가 연결되어 있지을 확인하기 위해서
-[Union-Find](https://github.com/mokhs00/TIL/blob/main/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98/Union-Find(%ED%95%A9%EC%A7%91%ED%95%A9%20%EC%B0%BE%EA%B8%B0).md) 알고리즘을 사용한다
+[Union-Find](https://github.com/mokhs00/CodingTest/blob/master/src/main/java/Algorithm/UnionFind.java) 알고리즘을 사용한다

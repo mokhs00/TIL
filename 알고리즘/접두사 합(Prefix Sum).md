@@ -6,4 +6,4 @@
 
 # 예시 코드
 
-https://github.com/mokhs00/CodingTest/blob/4208d2642eb3da17570b4cc1b9588a1717a3aecf/src/main/java/Algorithm/PrefixSum.java
+https://github.com/mokhs00/CodingTest/blob/master/src/main/java/Algorithm/PrefixSum.java
