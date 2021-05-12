@@ -89,7 +89,7 @@ v-show = visible
 
 v-for
 
-key 속성은 DOM 요소에 고유 키를 부여하고, vue는 이 요소를 파악하고 앱 내에서 항목이 없데이트 될 때 추적할 수있다.
+key 속성은 DOM 요소에 고유 키를 부여하고, vue는 이 요소를 파악하고 앱 내에서 항목이 업데이트 될 때 추적할 수있다.
 
 -> 성능 향상, 나중에 요소에 애니메이션을 적용하는 것과 같은 작업을 수행할 경우 Vue가 요소를 효과적으로 관리하는데 도움이 된다는 것을 알게된다고 함.
 
@@ -103,7 +103,7 @@ key 속성은 DOM 요소에 고유 키를 부여하고, vue는 이 요소를 파
 
 v-on
 
-컴포넌트 내에 methods option에 메소드를 정의하여 사용할 있음
+컴포넌트 내에 methods option에 메소드를 정의하여 사용할 수 있음
 
 shorthand @ 가능
 
@@ -141,7 +141,7 @@ v-bind를 이용한 class, style 바인딩
 <div 
     v-for="variant in variants" 
     class="color-circle"
-    :style="{'background-color': variant.color}"
+    :style="{'background-color': variant.color }"
     :key="variant.id" 
     @mouseover="updateImage(variant.image)"
     >
