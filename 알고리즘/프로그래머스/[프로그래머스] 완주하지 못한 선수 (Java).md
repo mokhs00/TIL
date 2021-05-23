@@ -1,10 +1,10 @@
-# **[프로그래머스 | 해시 Lv.1] 전화번호 목록**
+# **[프로그래머스 | 해시 Lv.1] 완주하지 못한 선수 (Java)**
 
 # 📖문제설명
 
 **자세한 문제 설명은 아래 링크를 참고해주세요.**
 
-**[문제링크](https://programmers.co.kr/learn/courses/30/lessons/425773?language=java#)**
+**[문제링크](https://programmers.co.kr/learn/courses/30/lessons/42576)**
 
 [문제 설명 이미지]
 
@@ -23,7 +23,7 @@
     
 # 구현 코드
 
-
+**[Github](https://github.com/mokhs00/CodingTest/blob/master/src/main/java/Programmers/%EC%99%84%EC%A3%BC%ED%95%98%EC%A7%80_%EB%AA%BB%ED%95%9C_%EC%84%A0%EC%88%98.java)**
 
 ``` java
 import java.util.HashMap;
