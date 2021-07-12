@@ -11,7 +11,7 @@
 
 ## 2. 특정 환경에 종속되지 않는다
 
-- 만일 특정 비즈니스 로직을 처리하는 부분에 외부 족속적인 http request, session 등 사용 시 POJO를 위배한 것으로 간주
+- 만일 특정 비즈니스 로직을 처리하는 부분에 외부 종속적인 http request, session 등 사용 시 POJO를 위배한 것으로 간주
 - @Annotation 기반으로 설정하는 부분도 엄연히 POJO라고 볼 수는 없음
 
 # POJO Framework
