@@ -21,6 +21,13 @@ CloudWatch는 로그, 지표 및 이벤트 형태로 모니터링 및 운영 데
 
 CloudWatch를 사용하여 환경에서 **이상 동작을 감지**하며, **경보를 설정**하고, **로그와 지표를 나란히 시각화**하며, **자동화된 작업을 수행**하고, 문제를 해결하며, 통찰력을 확보하여 애플리케이션을 원활하게 실행할 수 있음.
 
+## Amazon EC2 Auto Scaling
+
+![amazon-auto-scaling.png](./image/amazon-auto-scaling.png)
+
+**Amazon EC2 Auto Scaling**을 통해서 애플리케이션의 로드를 처리할 수 있는 정확한 수의 EC2 인스턴스를 보유하도록 보장할 수 있음.
+**Auto Scaling 그룹**이라는 EC2 인스턴스 모음을 생성해서 사용함. 각 Auto Scaling 그룹의 최소/최대 인스턴스 수를 지정할 수 있고, 그룹의 크기가 최소/최대 사이 값을 유지함. 또한 **조정 정책**을 지정했다면 Amazon EC2 Auto Scaling에서는 애플리케이션의 변동되는 수요에 따라 인스턴스를 시작하거나 종료할 수 있음!
+
 # Reference
 
 https://aws-builders-kr.workshop.aws/ko/
