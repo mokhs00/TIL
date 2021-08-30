@@ -120,3 +120,32 @@ try:
 finally:
     c.close()
 ```
+
+# Enum Field 선언하기
+
+models에 Enum Field를 다음과 같이 간단하게 선언할 수 있다.
+
+```python
+class Candidate(models.Model):
+    CandidateType = models.TextChoices('CandidateType', 'A B C')
+
+    type = models.CharField(max_length=100, choices=CandidateType.choices)
+
+```
+
+선언한 Enum Type을 가져와서 저장하는 법은 다음과 같이 한다.
+
+```python
+candidate = Candidate.save(Candidate(type=Candidate.CandidateType['A']))
+```
+
+또한 다음과 같이 Enum Type에 선언하지 않은 값을 사용하려고 하면?
+
+```python
+candidate = Candidate.save(Candidate(type=Candidate.CandidateType['D']))
+
+```
+
+다음과 같이 KeyError가 발생하면서 어느정도 validation되는 것을 볼 수 있다.
+
+![./django ORM/enum_type_key_error.png](./django%20ORM/enum_type_key_error.png)
