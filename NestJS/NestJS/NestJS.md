@@ -166,7 +166,7 @@ All은 모든 요청을 처리함
 
 ### Status Code
 
-response status code를 다음과 같이 간단하게 설정 가능하다.
+response status code를 다음과 같이 간단하게 설정 가능하다.  
 
 `@HttpCode(200)`
 `@HttpCode(HttpStatus.OK)`
