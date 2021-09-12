@@ -8,6 +8,9 @@
 - [Spring Security 로그인](#spring-security-로그인)
   - [인증 토큰(Authentication)을 제공하는 필터들](#인증-토큰authentication을-제공하는-필터들)
 - [Authentication 인터페이스](#authentication-인터페이스)
+- [정적 리소스 허용 편하게 하기](#정적-리소스-허용-편하게-하기)
+- [AuthenticationDetailsSource 커스텀하기](#authenticationdetailssource-커스텀하기)
+- [RoleHierarchy : 상위 하위 권한 설정](#rolehierarchy--상위-하위-권한-설정)
 
 # Spring Security
 
@@ -95,12 +98,175 @@ Spring Security에서 권한을 검증하는 방법
 - `Authentication` 을 제공하는 `AuthenticationProvider`는 여러개가 동시에 존재할 수 있음.
 - 또한, 인증 방식에 따라 `ProviderManager`도 여러개 존재할 수 있음.
 # Authentication 인터페이스
-| 필드                              | 개요           |
-| --------------------------------- | -------------- |
-| Set<GrantedAuthority> authorities | 인증 권한 정보 |
-| principal                         | 인증 대상에 관한 정보, 주로 UserDetails 객체가 옴               |
-|credentials| 인증 확인을 위한 정보. 주로 비밀번호가 오지만, 보안을 위해 인증 후 삭제함 |
-| details| 그 밖에 필요한 정보. IP, 세션, 기타 인증 요청에 사용했던 정보|
-|boolean authenticated| 인증여부 체크 (Anonymous로 통과 시에도 true임 위에 로그인 인증을 처리하는 기준 참고)|
+| 필드                                | 개요                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| `Set<GrantedAuthority> authorities` | 인증 권한 정보                                                                       |
+| `principal`                         | 인증 대상에 관한 정보, 주로 UserDetails 객체가 옴                                    |
+| `credentials`                       | 인증 확인을 위한 정보. 주로 비밀번호가 오지만, 보안을 위해 인증 후 삭제함            |
+| `details`                           | 그 밖에 필요한 정보. IP, 세션, 기타 인증 요청에 사용했던 정보                        |
+| `boolean authenticated`             | 인증여부 체크 (Anonymous로 통과 시에도 true임 위에 로그인 인증을 처리하는 기준 참고) |
+
+# 정적 리소스 허용 편하게 하기
+SecurityConfig에서 다음과 같이 설정하면 정적 리소스 허용을 한 번에 해줄 수 있다.
 
 
+``` java
+// SecurityConfig.java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    // '''
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring()
+                .requestMatchers(
+                        PathRequest.toStaticResources().atCommonLocations()
+                )
+        ;
+
+    }
+    // '''
+}
+
+```
+
+참고로 `PathRequest.toStaticResources().atCommonLocations()` 가 반환하는 값을 찾아가보면 enum type인 `StaticResourceLocation`의 모든 필드를 enumSet으로 반환하는 걸 찾아볼 수 있다.
+
+``` java
+// StaticResourceLocation.java
+package org.springframework.boot.autoconfigure.security;
+
+public enum StaticResourceLocation {
+
+	/**
+	 * Resources under {@code "/css"}.
+	 */
+	CSS("/css/**"),
+
+	/**
+	 * Resources under {@code "/js"}.
+	 */
+	JAVA_SCRIPT("/js/**"),
+
+	/**
+	 * Resources under {@code "/images"}.
+	 */
+	IMAGES("/images/**"),
+
+	/**
+	 * Resources under {@code "/webjars"}.
+	 */
+	WEB_JARS("/webjars/**"),
+
+	/**
+	 * The {@code "favicon.ico"} resource.
+	 */
+	FAVICON("/favicon.*", "/*/icon-*");
+
+	private final String[] patterns;
+
+	StaticResourceLocation(String... patterns) {
+		this.patterns = patterns;
+	}
+
+	public Stream<String> getPatterns() {
+		return Arrays.stream(this.patterns);
+	}
+
+}
+```
+
+``` java
+// StaticResourceRequest.java
+public final class StaticResourceRequest {
+  // '''
+  public StaticResourceRequestMatcher atCommonLocations() {
+		return at(EnumSet.allOf(StaticResourceLocation.class));
+	}
+  // '''
+}
+```
+
+# AuthenticationDetailsSource 커스텀하기
+formLogin시 `SecurityContextHolder`에 올라가는 `Authentication`의 details 멤버를 커스텀해보자. 
+과정은 다음 단계로 진행된다.
+
+- CustomAuthDetails 정의 : HttpServletRequest를 받아올 미들웨어
+- RequestInfo(details) 정의 : 실제 details 멤버에 들어갈 정보
+- SecurityConfig에 적용  (`login.authenticationDetailsSource(customAuthDetails`))
+
+
+
+``` java
+// CustomAuthDetails
+@Component
+public class CustomAuthDetails implements AuthenticationDetailsSource<HttpServletRequest, RequestInfo> {
+
+    @Override
+    public RequestInfo buildDetails(HttpServletRequest request) {
+        return RequestInfo.builder()
+                .remoteIp(request.getRemoteAddr())
+                .sessionId(request.getSession().getId())
+                .loginTime(LocalDateTime.now())
+                .build();
+    }
+}
+```
+
+
+``` java
+// RequestInfo
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class RequestInfo {
+
+    private String remoteIp;
+    private String sessionId;
+    private LocalDateTime loginTime;
+}
+```
+
+``` java
+// SecurityConfig.java
+
+@EnableWebSecurity(debug = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final CustomAuthDetails customAuthDetails; // (1)
+
+    public SecurityConfig(CustomAuthDetails customAuthDetails) {
+        this.customAuthDetails = customAuthDetails;
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .formLogin(
+                        login -> login.loginPage("/login")
+                                .permitAll()
+                                .defaultSuccessUrl("/", false)
+                                .failureUrl("/login-error")
+                                .authenticationDetailsSource(customAuthDetails) // (2)
+                )
+        ;
+
+    }
+```
+
+- (1) : CustomAuthDetails 생성자 주입
+- (2) : 주입받은 customAuthDetails를 authenticationDetailsSource로 설정
+
+# RoleHierarchy : 상위 하위 권한 설정
+Spring Security에서 Admin 권한이 있으면 User 권한이 필요한 페이지에도 접근할 수 있게 하는 방법으로 `RoleHierarchy`를 빈으로 등록하여 적용할 수 있다.
+
+
+``` java
+@Bean
+public RoleHierarchy roleHierarchy() {
+    RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+    roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
+    return roleHierarchy;
+}
+```
