@@ -11,6 +11,10 @@
 - [정적 리소스 허용 편하게 하기](#정적-리소스-허용-편하게-하기)
 - [AuthenticationDetailsSource 커스텀하기](#authenticationdetailssource-커스텀하기)
 - [RoleHierarchy : 상위 하위 권한 설정](#rolehierarchy--상위-하위-권한-설정)
+  - [Authentication 메커니즘](#authentication-메커니즘)
+  - [인증 제공자 (AuthenticationProvider)](#인증-제공자-authenticationprovider)
+  - [인증 관리자 (AuthenticationManager)](#인증-관리자-authenticationmanager)
+  - [Authentication 메커니즘 커스텀하기 (AutehnticationProvider, AuthenticationManager)](#authentication-메커니즘-커스텀하기-autehnticationprovider-authenticationmanager)
 
 # Spring Security
 
@@ -269,4 +273,154 @@ public RoleHierarchy roleHierarchy() {
     roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
     return roleHierarchy;
 }
+```
+
+## Authentication 메커니즘
+Authentication은 인증된 결과뿐만 아니라, **인증을 하기 위한 정보와 인증을 받기 위한 정보가 하나의 객체에 동시에 들어있다.**
+
+이는 인증을 제공해줄 `AuthenticationProvier`가 어떤 인증에 대해서 허가를 내줄 것인지 판단하기 위해서 **직접 입력된 인증을 보고 허가된 인증을 내어주는 방식**이기 때문이다.
+그래서 `AuthenticationProvider`는 처리가능한 **Authentication에 대해서 알려주는** `supports(Class<?> authentication)` 메서드를 지원하고, `authenticate(Authentication authentication)`에서 Authentication을 입력값과 동시에 출력값으로도 사용한다. 
+
+- Authentication 구현체는 보통 Token이라는 이름의 객체로 구현되며 이를 인증 토큰이라고 부르기도 한다.
+- Authentication 객체는 SecurityContextHolder를 통해 세션과 무관하게 언제든 접근할 수 있도록 필터체인에서 보장해준다.
+
+
+## 인증 제공자 (AuthenticationProvider)
+
+- `AuthenticationProvider`는 기본적으로 Authentication을 받아서 해당 객체를 인증하고 인증된 결과를 다시 Authentication 객체로 전달한다.
+- 이 때 해당 **인증 제공자(AuthenticationProvider)**가 어떤 인증을 진행할지 `AuthenticationManager`에게 알려줘야 하기 때문에 `supports()`라는 메서드로 인증 대상에 대한 정보를 제공해야한다.
+- 또한, 인증 대상과 방식이 다양할 수 있으므로, 인증 제공자(AuthenticationProvider) 또한 여러개가 있을 수 있다.
+
+다음은 supports() 메서드를 구현한 예시이다.
+``` java
+@Override
+public boolean supports(Class<?> authentication) {
+    return authentication == UsernamePasswordAuthenticationToken.class;
+}
+```
+
+
+## 인증 관리자 (AuthenticationManager)
+
+- 인증 제공자들을 관리한다. Spring Security에서는 `AuthenticationManager` 인터페이스가 제공되고 이를 구현한 객체가 `ProviderManager`이다.
+- ProviderManager 또한 AuthenticationProvider와 동일하게 여러개 존재할 수 있다.
+- 개발자가 직접 `AuthenticationManager`를 정의해서 제공하지 않는다면, `AuthenticationManagerFactoryBean`에서 `DaoAuthenticationProvider`를 기본 인증 제공자로 등록한 `AuthenticationManger`를 만든다.
+- DaoAuthenticationProvider는 반드시 1개의 UserDetailsService를 발견할 수 있어야하고 만약 없다면, `InmemoryUserDetailsManager`에 `[username=user, password={서버가 생성한 비밀번호}]`로 사용자가 등록되어 제공된다.
+
+## Authentication 메커니즘 커스텀하기 (AutehnticationProvider, AuthenticationManager)
+
+Authentication 메커니즘을 커스텀 해보자.
+
+
+실제로는 주로 `AuthenticationManagerFactoryBean`이 기본으로 제공하는 `DaoAuthenticationProvider`을 이용해, `UserDetailsService`와 `UserDetails`를 구현해서 사용하지만, 학습을 위해서 커스텀 해보자.
+
+구현 과정은 다음과 같다.
+
+- Authentication 구현체에 넣을 principal 객체 구현 -> `Student`
+- Authentication 구현체 생성 -> `StudentAuthenticationToken`
+- AuthenticationProvider 구현 -> `StudentManager`
+- AutehnticationManager 등록
+
+
+``` java
+// Student.java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class Student {
+    private String id;
+    private String username;
+    private Set<GrantedAuthority> role;
+}
+```
+
+
+``` java
+// StudentAuthenticationToken.java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class StudentAuthenticationToken implements Authentication {
+    private Student principal;
+    private String credentials;
+    private String details;
+    private boolean authenticated;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return principal == null ? new HashSet<>() : principal.getRole();
+    }
+
+    @Override
+    public String getName() {
+        return principal == null ? "" :  principal.getUsername();
+    }
+
+}
+
+
+```
+
+``` java
+// StudentManager.java
+@Component
+@Slf4j
+public class StudentManager implements AuthenticationProvider, InitializingBean {
+    private HashMap<String, Student> studentDB = new HashMap<>(); // (1)
+
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) authentication;
+        if (studentDB.containsKey(token.getName())) {
+            Student student = studentDB.get(token.getName());
+            return StudentAuthenticationToken.builder()
+                    .principal(student)
+                    .details(student.getUsername())
+                    .authenticated(true)
+                    .build();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return authentication == UsernamePasswordAuthenticationToken.class;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception { // (1)
+        Set.of(
+                new Student("hong", "홍홍", Set.of(new SimpleGrantedAuthority("ROLE_STUDENT"))),
+                new Student("kim", "김김", Set.of(new SimpleGrantedAuthority("ROLE_STUDENT"))),
+                new Student("woo", "우우", Set.of(new SimpleGrantedAuthority("ROLE_STUDENT")))
+        ).forEach(s ->
+                studentDB.put(s.getId(), s)
+        );
+    }
+}
+
+
+```
+
+- (1) : 스프링 빈으로 등록 후에 실행되는 메서드 현재 DB를 사용하지 않아 HashMap 자료형에 임의로 값을 넣어줌
+
+
+``` java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final StudentManager studentManager;
+
+    public SecurityConfig(StudentManager studentManager) {
+        this.studentManager = studentManager;
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(studentManager);
+    }
+}
+
+
 ```
