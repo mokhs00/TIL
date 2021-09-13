@@ -11,7 +11,7 @@
 - [정적 리소스 허용 편하게 하기](#정적-리소스-허용-편하게-하기)
 - [AuthenticationDetailsSource 커스텀하기](#authenticationdetailssource-커스텀하기)
 - [RoleHierarchy : 상위 하위 권한 설정](#rolehierarchy--상위-하위-권한-설정)
-  - [Authentication 메커니즘](#authentication-메커니즘)
+- [Authentication 메커니즘](#authentication-메커니즘)
   - [인증 제공자 (AuthenticationProvider)](#인증-제공자-authenticationprovider)
   - [인증 관리자 (AuthenticationManager)](#인증-관리자-authenticationmanager)
   - [Authentication 메커니즘 커스텀하기 (AutehnticationProvider, AuthenticationManager)](#authentication-메커니즘-커스텀하기-autehnticationprovider-authenticationmanager)
@@ -71,7 +71,7 @@ Spring Security에서 권한을 검증하는 방법
 - BearerTokenAuthenticationFilter : `Authorization` 헤더의 Bearer 토큰에 대한 검사 -> **spring boot 2.5.3에서 찾을 수 없음..**
 - BasicAuthenticationFilter : `Authrization` 헤더에 Basic 토큰에 대한 검사
 - RequestCacheAwareFilter : 캐시처리 관련 
-- SecurityContextHolderAwareRequestFilter : 보완 관련해서 Servlet 3 스펙을 지우너하기 위한 필터
+- SecurityContextHolderAwareRequestFilter : 보안 관련해서 Servlet 3 스펙을 지원하기 위한 필터
 - RememberMeAuthenticationFilter : 인증이 되지 않은 경우 RememberMe 쿠키를 검사하여 인증처리
 - AnonymousAuthenticationFilter : 인증되지 않은 경우 Anonymous 사용자로 filter 통과 
 - SessionManagemetFilter : 서버에서 지정한 세션 정책을 검사
@@ -275,7 +275,7 @@ public RoleHierarchy roleHierarchy() {
 }
 ```
 
-## Authentication 메커니즘
+# Authentication 메커니즘
 Authentication은 인증된 결과뿐만 아니라, **인증을 하기 위한 정보와 인증을 받기 위한 정보가 하나의 객체에 동시에 들어있다.**
 
 이는 인증을 제공해줄 `AuthenticationProvier`가 어떤 인증에 대해서 허가를 내줄 것인지 판단하기 위해서 **직접 입력된 인증을 보고 허가된 인증을 내어주는 방식**이기 때문이다.
