@@ -15,6 +15,7 @@
   - [인증 제공자 (AuthenticationProvider)](#인증-제공자-authenticationprovider)
   - [인증 관리자 (AuthenticationManager)](#인증-관리자-authenticationmanager)
   - [Authentication 메커니즘 커스텀하기 (AutehnticationProvider, AuthenticationManager)](#authentication-메커니즘-커스텀하기-autehnticationprovider-authenticationmanager)
+- [Basic 토큰인증 (with SPA, etc..)](#basic-토큰인증-with-spa-etc)
 
 # Spring Security
 
@@ -424,3 +425,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 
 ```
+
+# Basic 토큰인증 (with SPA, etc..)
+
+- Basic 토큰 인증 방식은 `username:password`를 base64 encoding하고 `Authorization` header로 넘겨서 사용자를 인증한다.
+- `username:password` 값이 header에 같이 전송되기 때문에 보안에 취악하므로 https 프로토콜 사용을 권장한다.
+- 최초 로그인 시에만 인증을 처리하고, 이후에는 세션에 의존.
+- `RememberMe`를 설정한 경우 세션이 만료되더라도 remember-me 쿠키를 확인하여 인증처리한다.
+
+- 다음과 같이 SSR(Server Side Rendering)로 로그인 페이지를 사용할 수 없는 상황에 사용한다.
+
+  - SPA (react, angular, vue ...)
+  - 브라우저 기반의 모바일 앱(ex : ionic)
+
