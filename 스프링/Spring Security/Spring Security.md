@@ -16,6 +16,7 @@
   - [인증 관리자 (AuthenticationManager)](#인증-관리자-authenticationmanager)
   - [Authentication 메커니즘 커스텀하기 (AutehnticationProvider, AuthenticationManager)](#authentication-메커니즘-커스텀하기-autehnticationprovider-authenticationmanager)
 - [Basic 토큰인증 (with SPA, etc..)](#basic-토큰인증-with-spa-etc)
+  - [DaoAuthenticationProvider, UserDetailsService](#daoauthenticationprovider-userdetailsservice)
 
 # Spring Security
 
@@ -438,3 +439,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   - SPA (react, angular, vue ...)
   - 브라우저 기반의 모바일 앱(ex : ionic)
 
+
+## DaoAuthenticationProvider, UserDetailsService
+
+실제 개발 환경에서는 대부분 DB를 사용해 사용자를 관리한다.
+
+실제로 Spring Security를 사용해서 서비스를 만들라고 하면 대부분 User 객체와 UserDetailsService를 구현하여 만든다.
+
+그 이유는 UserDetailsService와 UserDetails 구현체(User)만 구현하면 나머지는 Spring Security가 쉽게 사용할 수 있도록 지원해주기 때문!
+
+추가로 Spring Security는 default값으로 다음과 같은 인증 처리 흐름을 제공한다 
+1. `UsernamePasswordAuthenticationFilter` 입장 -> 
+2. UsernamePasswordAuthenticationToken을  `ProviderManager(AuthenticationManager)`에 넘김 -> 
+3. `DaoAuthenticationProvider(AuthenticationProvider)`가 해당 통행증(Token)을 처리 -> 
+4. `UserService(UserDetailsService)`이 존재한다면, 처리  -> 
+5. UserService에서 가져온 `User(UserDetails)`를 principal로 설정 -> 
+6. `UsernamePasswordAuthenticationToken` 발급
