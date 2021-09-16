@@ -9,6 +9,7 @@
   - [인증 토큰(Authentication)을 제공하는 필터들](#인증-토큰authentication을-제공하는-필터들)
 - [Authentication 인터페이스](#authentication-인터페이스)
 - [정적 리소스 허용 편하게 하기](#정적-리소스-허용-편하게-하기)
+- [H2-console path 허용 간편하게 하기 (PathRequest)](#h2-console-path-허용-간편하게-하기-pathrequest)
 - [AuthenticationDetailsSource 커스텀하기](#authenticationdetailssource-커스텀하기)
 - [RoleHierarchy : 상위 하위 권한 설정](#rolehierarchy--상위-하위-권한-설정)
 - [Authentication 메커니즘](#authentication-메커니즘)
@@ -17,6 +18,7 @@
   - [Authentication 메커니즘 커스텀하기 (AutehnticationProvider, AuthenticationManager)](#authentication-메커니즘-커스텀하기-autehnticationprovider-authenticationmanager)
 - [Basic 토큰인증 (with SPA, etc..)](#basic-토큰인증-with-spa-etc)
   - [DaoAuthenticationProvider, UserDetailsService](#daoauthenticationprovider-userdetailsservice)
+  - [UserDetailsService, UserDetails 구현](#userdetailsservice-userdetails-구현)
 
 # Spring Security
 
@@ -134,6 +136,34 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 
 ```
+
+# H2-console path 허용 간편하게 하기 (PathRequest)
+
+PathRequest에서 지원해준다. `WebSecurityConfigurerAdapter` 구현체에서 다음과 같이 설정하자
+
+``` java
+// SecurityConfig.java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    // '''
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring()
+                .requestMatchers(
+                        PathRequest.toStaticResources().atCommonLocations(), // (1)
+                        PathRequest.toH2Console() // (2)
+                )
+        ;
+    }
+    // '''
+
+}
+```
+
+- (1) 정적 리소스 허용
+- (2) h2-console 허용
+
 
 참고로 `PathRequest.toStaticResources().atCommonLocations()` 가 반환하는 값을 찾아가보면 enum type인 `StaticResourceLocation`의 모든 필드를 enumSet으로 반환하는 걸 찾아볼 수 있다.
 
@@ -455,3 +485,124 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 4. `UserService(UserDetailsService)`이 존재한다면, 처리  -> 
 5. UserService에서 가져온 `User(UserDetails)`를 principal로 설정 -> 
 6. `UsernamePasswordAuthenticationToken` 발급
+
+
+## UserDetailsService, UserDetails 구현
+
+Spring Data Jpa를 곁들여서 UserDetailsService, UserDetails를 구현해보자. 다음의 순서로 진행된다.
+
+
+- `UserDetails`(SpUser), `GrantedAuthority`(SpAuthority) 구현
+- `JpaRepository`(SpUserRepository), `UserDetailsService`(SpUserService) 구현
+- `UserDetailsService`(SpUserService) 등록
+
+``` java
+// SpUser.java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Entity
+@Table(name = "sp_user")
+public class SpUser implements UserDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userId;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "user_id"))
+    private Set<SpAuthority> authorities;
+
+    private String email;
+
+    private String password;
+
+    private boolean enabled;
+
+    @Override
+    public Set<SpAuthority> getAuthorities() {
+        return this.authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return this.enabled;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return this.enabled;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return this.enabled;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+}
+```
+
+``` java
+// SpUserRepository.java
+public interface SpUserRepository extends JpaRepository<SpUser, Long> {
+    Optional<SpUser> findSpUserByEmail(String email);
+}
+```
+
+``` java
+// SpUserService.java
+@Service
+@Transactional
+public class SpUserService implements UserDetailsService {
+
+    private final SpUserRepository spUserRepository;
+
+    public SpUserService(SpUserRepository spUserRepository) {
+        this.spUserRepository = spUserRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return spUserRepository.findSpUserByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
+    }
+
+}
+```
+
+``` java
+// SecurityConfig.java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final SpUserService userService;
+
+    public SecurityConfig(SpUserService userService) {
+        this.userService = userService;
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+                .userDetailsService(userService); // (1) 
+    }
+
+    // ```
+}
+```
+
+- (1) userDetailsService 등록
