@@ -19,6 +19,9 @@
 - [Basic 토큰인증 (with SPA, etc..)](#basic-토큰인증-with-spa-etc)
   - [DaoAuthenticationProvider, UserDetailsService](#daoauthenticationprovider-userdetailsservice)
   - [UserDetailsService, UserDetails 구현](#userdetailsservice-userdetails-구현)
+- [로그인을 지원하기 위한 필터들](#로그인을-지원하기-위한-필터들)
+  - [스프링이 지원하는 로그인 방식](#스프링이-지원하는-로그인-방식)
+  - [세션 이용하기 In Spring Security](#세션-이용하기-in-spring-security)
 
 # Spring Security
 
@@ -606,3 +609,41 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 ```
 
 - (1) userDetailsService 등록
+
+# 로그인을 지원하기 위한 필터들
+
+로그인 인증은 보통 세션 or SessionLess 방식 등을 이용한다.
+
+스프링 시큐리티의 인증 처리는 세션과 별도로 동작하도록 설계되어있고, session의 유무에 상관없이 `Authentication`과 `AuthenticationProvider`를 사용할 수 있다.
+
+## 스프링이 지원하는 로그인 방식
+먼저 스프링이 지원하는 로그인 방식들을 알아보자.
+이는 다음과 같다.
+- UsernamePasswordAuthentication
+  - 폼 로그인
+  - 세션 기반
+- Basic Authentication 
+  - 클라이언트 로그인 (header에 username:password)
+  - 세션 혹은 SessionLess
+- OAuth2 로그인
+- JWT 토큰 (Bearer Token)
+  - 클라이언트 로그인
+  - 주로 SessionLess 혹은 세션
+
+
+## 세션 이용하기 In Spring Security
+
+WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려면 `SecurityContextPersistenceFilter`와 `RememberMeAuthenticationFilter`, `AnonymousAuthenticationFilter` 등과 같이 인증을 보조해주는 필터의 도움을 받아야한다.
+
+이제부터 이 필터들에 대해서 알아보자
+
+- `SecurityContextPersistenceFilter`
+  - `SecurityContextPersistenceFilter`는 저장된 `SecurityContext`를 `Request`의 `LocalThread`에 넣어주었다가 뺏는 역할을 한다.
+
+- `RememberMeAuthenticationFilter`
+  - 인증 정보를 세션 관리하는 경우 세션이 만료된다면, `remember-me`쿠키를 이용해서 로그인을 기억했다가 자동으로 로그인을 처리할 수 있다.
+
+
+- `AnonymousAuthentcationFilter`
+  - 로그인 하지 않은 사용자 혹은 로그인이 검증되지 않은 사용자는 기본적으로 AnonymousAuthenticationToken을 발급해주고, ROLE_ANONYMOUS가 허용되는 리소스에만 접근할 수있다.
+  - 익명 사용자의 권한을 커스텀할 수도 있고, 익명 사용자의  principal 객체도 커스텀할 수 있다.
