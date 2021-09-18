@@ -22,6 +22,10 @@
 - [로그인을 지원하기 위한 필터들](#로그인을-지원하기-위한-필터들)
   - [스프링이 지원하는 로그인 방식](#스프링이-지원하는-로그인-방식)
   - [세션 이용하기 In Spring Security](#세션-이용하기-in-spring-security)
+  - [`SecurityContextPersistenceFilter`](#securitycontextpersistencefilter)
+  - [`RememberMeAuthenticationFilter`](#remembermeauthenticationfilter)
+  - [`AnonymousAuthentcationFilter`](#anonymousauthentcationfilter)
+    - [HttpSessionEventPublisher](#httpsessioneventpublisher)
 
 # Spring Security
 
@@ -637,13 +641,45 @@ WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려�
 
 이제부터 이 필터들에 대해서 알아보자
 
-- `SecurityContextPersistenceFilter`
-  - `SecurityContextPersistenceFilter`는 저장된 `SecurityContext`를 `Request`의 `LocalThread`에 넣어주었다가 뺏는 역할을 한다.
+## `SecurityContextPersistenceFilter`
+- `SecurityContextPersistenceFilter`는 저장된 `SecurityContext`를 `Request`의 `LocalThread`에 넣어주었다가 뺏는 역할을 한다.
+- SecurityContextPersistenceFilter는 SecurityContext를 저장하는 `SecurityContextRepository`를 사용하는데, SecurityContextRepository의 여러 구현체 중에 http 세션에 `SecurityContext`를 저장하는 `HttpSessionSecurityContextRepository`를 default로 사용한다. 
+- 
 
-- `RememberMeAuthenticationFilter`
-  - 인증 정보를 세션 관리하는 경우 세션이 만료된다면, `remember-me`쿠키를 이용해서 로그인을 기억했다가 자동으로 로그인을 처리할 수 있다.
+## `RememberMeAuthenticationFilter`
+- 세션이 만료되어도, `remember-me`쿠키를 이용해서 로그인을 기억했다가 자동으로 로그인을 처리할 수 있다.
 
 
-- `AnonymousAuthentcationFilter`
-  - 로그인 하지 않은 사용자 혹은 로그인이 검증되지 않은 사용자는 기본적으로 AnonymousAuthenticationToken을 발급해주고, ROLE_ANONYMOUS가 허용되는 리소스에만 접근할 수있다.
-  - 익명 사용자의 권한을 커스텀할 수도 있고, 익명 사용자의  principal 객체도 커스텀할 수 있다.
+## `AnonymousAuthentcationFilter`
+- 로그인 하지 않은 사용자 혹은 로그인이 검증되지 않은 사용자는 기본적으로 AnonymousAuthenticationToken을 발급해주고, ROLE_ANONYMOUS가 허용되는 리소스에만 접근할 수있다.
+- 익명 사용자의 권한을 커스텀할 수도 있고, 익명 사용자의  principal 객체도 커스텀할 수 있다.
+
+
+### HttpSessionEventPublisher
+
+ServletListenerRegistrationBean<HttpSessionEventPublisher>를 스프링 빈으로 다음과 같이 등록해서 Session의 생명주기에 대해서 모니터링할 수 있다.
+
+``` java
+
+@Bean
+public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisherServletListenerRegistrationBean() {
+
+    return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher() {
+        @Override
+        public void sessionCreated(HttpSessionEvent event) {
+            super.sessionCreated(event);
+            log.info("===>> [{}] SESSION CREATED {} \n", LocalDateTime.now(), event.getSession().getId());
+        }
+        @Override
+        public void sessionDestroyed(HttpSessionEvent event) {
+            super.sessionDestroyed(event);
+            log.info("===>> [{}] SESSION DESTROYED {} \n", LocalDateTime.now(), event.getSession().getId());
+        }
+        @Override
+        public void sessionIdChanged(HttpSessionEvent event, String oldSessionId) {
+            super.sessionIdChanged(event, oldSessionId);
+            log.info("===>> [{}] SESSION CHANGED {} to {} \n", LocalDateTime.now(), oldSessionId, event.getSession().getId());
+        }
+    });
+}
+```
