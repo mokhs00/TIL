@@ -26,6 +26,7 @@
   - [`RememberMeAuthenticationFilter`](#remembermeauthenticationfilter)
   - [`AnonymousAuthentcationFilter`](#anonymousauthentcationfilter)
     - [HttpSessionEventPublisher](#httpsessioneventpublisher)
+- [세션 관리](#세션-관리)
 
 # Spring Security
 
@@ -683,3 +684,7 @@ public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEve
     });
 }
 ```
+# 세션 관리
+서버는 보통 사용자를 판단할 때 토큰을 발급하고 해당 토큰을 세션에 넣어서 세션 여부에 따라 인증 여부를 결정한다. 
+그리고 해커들은 세션이 인증역할을 한다는 것을 알고 있기때문에 세션 탈취를 시도한다.
+그래서 세션 관리에 헛점이 없도록 기본 구성 내용을 잘 아는 것은 중요하다.
