@@ -25,7 +25,7 @@
   - [`SecurityContextPersistenceFilter`](#securitycontextpersistencefilter)
   - [`RememberMeAuthenticationFilter`](#remembermeauthenticationfilter)
   - [`AnonymousAuthentcationFilter`](#anonymousauthentcationfilter)
-    - [HttpSessionEventPublisher](#httpsessioneventpublisher)
+  - [HttpSessionEventPublisher](#httpsessioneventpublisher)
 - [세션 관리](#세션-관리)
 
 # Spring Security
@@ -640,6 +640,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려면 `SecurityContextPersistenceFilter`와 `RememberMeAuthenticationFilter`, `AnonymousAuthenticationFilter` 등과 같이 인증을 보조해주는 필터의 도움을 받아야한다.
 
+- 기본적으로 인증에 대한 것은 필터 권한에 대한 것은 인터셉터에서 관리한다. 
+- 권한은 API마다 다를 수 있어 인터셉터에서 검증하는 것이 적합하고, 인증에 관한 것은 해당 애플리케이션 서버에 접속할 수 있는 것 자체에 대해서 검증하는 것이므로 애플리케이션에 들어오기 전 필터에서 하는 것이 적합하다.
+
 이제부터 이 필터들에 대해서 알아보자
 
 ## `SecurityContextPersistenceFilter`
@@ -656,7 +659,7 @@ WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려�
 - 익명 사용자의 권한을 커스텀할 수도 있고, 익명 사용자의  principal 객체도 커스텀할 수 있다.
 
 
-### HttpSessionEventPublisher
+## HttpSessionEventPublisher
 
 ServletListenerRegistrationBean<HttpSessionEventPublisher>를 스프링 빈으로 다음과 같이 등록해서 Session의 생명주기에 대해서 모니터링할 수 있다.
 
