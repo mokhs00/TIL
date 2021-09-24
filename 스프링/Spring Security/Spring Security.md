@@ -654,6 +654,29 @@ WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려�
 - 세션이 만료되어도, `remember-me`쿠키를 이용해서 로그인을 기억했다가 자동으로 로그인을 처리할 수 있다.
 
 
+- RememberMeAuthenticationFilter는 `RememberMeServices`를 갖는데 이를 구현한 `AbstractRememberMeServices`가 존재하고 또 이를 상속받아 구현되는 `TokenBasedRemeberMeServices`와 `PersistenceTokenBasedRememberMeServieces`가 있는데, 이에 대한 설명은 다음과 같다.
+
+- `TokenBasedRemeberMeServices`
+  - 별도 설정이 없을 시 default값
+  - 토큰 기반으로 **브라우저에만!** 토큰을 저장한다.
+  - `아이디:만료시간:Md5Hex(아이디:만료시간:비밀번호:인증키)` 의 형식을 갖는다.
+  - 토큰 탈취 시 비밀번호가 변경되지 않고, 만료시간이 지나지 않는 한 접근을 막을 방법이 없다.
+  - 또한 토큰이 탈취되었는지 판별도 쉽지 않다.
+  - 기본 유효기간은 14일이고 설정이 가능하다.
+
+- `PersistenceTokenBasedRememberMeServieces`
+  - 서버(DB)에도 토큰을 저장한다.
+  - `series:token` 의 형식을 가져서, 토큰에 username, 만료시간이 노출되지 않는다. 
+  - PersistentTokenRepository에 토큰 값이 저장되며, 토큰의 필드값은 다음과 같다.
+    - `username : String`
+    - `series : String`
+    - `token : String`
+    - `last_used : Date`
+  - series는 브라우저마다 다른 값을 가지는데, series가 달라질 시 토큰의 유효성은 사라진다. 즉 같은 브라우저에서만 **연속적 인증**을 허용하여 토큰 탈취 시 위험성을 어느정도 줄일 수 있다.
+  - 재로그인될 때 마다 token 값을 갱신해주며, 토큰이 탈취되어 다른 사용자가 다른 장소에서 로그인을 했다면 정상 사용자가 다시 로그인할 때, `CookieTheftException`이 발생하고, 서버는 해당 사용자로 발급된 모든 remember-me 쿠키값들을 삭제하고 재로그인을 요청하게 된다.
+  - `InmemoryTokenRepository`는 서버가 재시작되면 등록된 토큰들이 사라지므로, `JdbcTokenRepository`를 사용하거나 이와 유사한 방법으로 토큰을 관리해야한다.
+
+
 ## `AnonymousAuthentcationFilter`
 - 로그인 하지 않은 사용자 혹은 로그인이 검증되지 않은 사용자는 기본적으로 AnonymousAuthenticationToken을 발급해주고, ROLE_ANONYMOUS가 허용되는 리소스에만 접근할 수있다.
 - 익명 사용자의 권한을 커스텀할 수도 있고, 익명 사용자의  principal 객체도 커스텀할 수 있다.
