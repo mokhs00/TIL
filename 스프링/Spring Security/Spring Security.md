@@ -675,6 +675,7 @@ WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려�
   - series는 브라우저마다 다른 값을 가지는데, series가 달라질 시 토큰의 유효성은 사라진다. 즉 같은 브라우저에서만 **연속적 인증**을 허용하여 토큰 탈취 시 위험성을 어느정도 줄일 수 있다.
   - 재로그인될 때 마다 token 값을 갱신해주며, 토큰이 탈취되어 다른 사용자가 다른 장소에서 로그인을 했다면 정상 사용자가 다시 로그인할 때, `CookieTheftException`이 발생하고, 서버는 해당 사용자로 발급된 모든 remember-me 쿠키값들을 삭제하고 재로그인을 요청하게 된다.
   - `InmemoryTokenRepository`는 서버가 재시작되면 등록된 토큰들이 사라지므로, `JdbcTokenRepository`를 사용하거나 이와 유사한 방법으로 토큰을 관리해야한다.
+  - 로그아웃하게되면 다른 곳에서 만들어놓은 remember-me 쿠키값이 쓸모없어지므로 만약, 다른 곳의 remember-me 쿠키를 살리고 싶다면, series로 구분하여 삭제하도록 logout을 수정해야한다.
 
 
 ## `AnonymousAuthentcationFilter`
