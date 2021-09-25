@@ -28,6 +28,8 @@
   - [`AnonymousAuthentcationFilter`](#anonymousauthentcationfilter)
   - [HttpSessionEventPublisher](#httpsessioneventpublisher)
 - [세션 관리](#세션-관리)
+  - [ConcurrentSessionFilter](#concurrentsessionfilter)
+  - [SessionManagementFilter](#sessionmanagementfilter)
 
 # Spring Security
 
@@ -782,3 +784,35 @@ public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEve
 서버는 보통 사용자를 판단할 때 토큰을 발급하고 해당 토큰을 세션에 넣어서 세션 여부에 따라 인증 여부를 결정한다.
 그리고 해커들은 세션이 인증역할을 한다는 것을 알고 있기때문에 세션 탈취를 시도한다.
 그래서 세션 관리에 헛점이 없도록 기본 구성 내용을 잘 아는 것은 중요하다.
+
+다음은 세션 관리에 관여되는 필터들이다.
+## ConcurrentSessionFilter
+
+- Session은 서블릿 컨테이너(톰켓)에서 제공하는 것이므로 스프링이 제어할 수는 없지만 서블릿 컨테이너가 넘겨주는 세션을 스프링의 SessionRegistry에서 SessionInformation이라는 래퍼 클래스로 관리하고,
+- SessionInformation를 살펴봤을 때 expired 되었다면 해당 세션이 애플리케이션으로 들어오지 못하게 한다.
+- 어떤 SessionInformation을 expire할 것인가에 대한 정책은 SessionManagementFilter에서 관리한다.
+
+## SessionManagementFilter
+
+- SessionAuthenticationStrategy에서 다음과 같은 설정으로 여러가지 세션 인증 정책을 관리할 수 있다.
+
+``` java
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .sessionManagement(s -> s
+//                                .sessionCreationPolicy(p-> SessionCreationPolicy.STATELESS) // (1)
+                                .sessionFixation(sessionFixationConfigurer -> sessionFixationConfigurer.changeSessionId()) // (2)
+                                .maximumSessions(2) // (3)
+                                .maxSessionsPreventsLogin(true) // (4)
+                                .expiredUrl("/session-expired") // (5)
+                )
+        ;
+    }
+```
+
+- (1) `세션 생성 정책`을 설정할 수 있음. 보통 ALWAYS나 STATELESS를 사용하며, 거의 건들 일이 없지만, JWT 사용 시 STATELESS 정도를 사용할 수 있다.
+- (2) `세션 고정 정책`을 설정할 수 있다. changeSessionId()가 기본 값이며, 세션 고정 시 해커가 임의로 자신의 세션을 대상자에게 심어서 자동 로그인에 사용할 수 있으므로 주의해야한다.
+- (3) `세션 최대 수 정책`을 설정할 수 있다.
+- (4) `세션 초과 시 로그인 방지 정책`을 설정할 수 있다.
+- (5) `세션 만료 시 이동할 페이지`를 설정할 수 있다.
