@@ -677,7 +677,7 @@ WAS의 세션 정책과 스프링의 인증 체계를 조합해서 사용하려�
 
 ## PersistenceTokenBasedRememberMeServices 적용
 
-- PersistenceTokenBasedRememberMeServices는 DB에 remmeber-me 정보를 저장하므로 스케일 아웃 시에도 유리하다고 볼 수 있으니 알아두자.
+- PersistenceTokenBasedRememberMeServices는 DB에 remember-me 정보를 저장하므로 스케일 아웃 시에도 유리하다고 볼 수 있으니 알아두자.
 - 다음은 `PersistenceTokenBasedRememberMeServices`를 적용한 예시 코드이다.
 
 ``` java
