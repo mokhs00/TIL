@@ -24,3 +24,26 @@ django로 개발하면서 공부한 내용을 기록합니다.
   ```
 
 
+
+# django utils.dateparse
+
+## parse_datetime
+
+- datetime 형식을 문자열로 파싱해준다
+
+``` python 
+>>> from django.utils.dateparse import parse_datetime
+>>> parse_date('2021-10-02')
+datetime.date(2021, 10, 2)
+```
+
+## 기본에 충실하자 : python의 dateutil.parser.parse()
+
+``` python
+>>> from dateutil.parser import parse
+>>> parse('2020-10-10')
+datetime.datetime(2020, 10, 10, 0, 0)
+>>> parse('2020-10-10').date()
+datetime.date(2020, 10, 10)
+
+```
