@@ -30,6 +30,11 @@
 - [세션 관리](#세션-관리)
   - [ConcurrentSessionFilter](#concurrentsessionfilter)
   - [SessionManagementFilter](#sessionmanagementfilter)
+- [세션 인증 vs 토큰 인증](#세션-인증-vs-토큰-인증)
+  - [JWT](#jwt)
+    - [JWT 스펙에서 지정한 claim](#jwt-스펙에서-지정한-claim)
+    - [토큰에는 어떤 데이터를 담아야 하는가?](#토큰에는-어떤-데이터를-담아야-하는가)
+    - [토큰 관리](#토큰-관리)
 
 # Spring Security
 
@@ -816,3 +821,78 @@ public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEve
 - (3) `세션 최대 수 정책`을 설정할 수 있다.
 - (4) `세션 초과 시 로그인 방지 정책`을 설정할 수 있다.
 - (5) `세션 만료 시 이동할 페이지`를 설정할 수 있다.
+
+
+# 세션 인증 vs 토큰 인증
+
+- 서버에서 인증을 유지해주는 방법으로 보통 세션을 이용하지만, 여러 대의 서버를 둘 경우 세션 관리에 대한 비용이 매우 커지게 된다.
+- 또한 같은 사용자가 서로 다른 도메인의 데이테를 요청할 경우 SSO(Single Sign-On)을 위한 세션 관리 비용도 매우 커지게 된다.
+
+- 위와 같은 이유에서 인증 정보를 담은 토큰을 이용해서 이를 매 요청마다 검사하여 인증용도로 사용하는 방식이 유용하다.
+- 그리고 대표적인 토큰으로 JWT(Json Web Token)가 있다.
+
+## JWT
+- header, body, signature로 구성되어 있다.
+- JWT 자바 라이브러리는 보통 다음 두 가지를 이용한다.
+  - auth0.com 에서 만든 java-jwt 
+  - okta 에서 만든 jjwt 라이브러리
+- 두 라이브러리는 signingKey를 사용하는 방식에 차이가 있으니 주의해야한다.
+  - java-jwt에서는 key를 그대로 사용하고 JWT는 key를 해싱해서 사용한다.
+- 다음 코드는 각각 jjwt와 java-jwt를 이용해서 JWT를 만들어본 코드이다.
+
+``` java
+void test_jjwt() {
+    String token = Jwts.builder().addClaims(
+                    Map.of("user_id", 1, "price", 3000)
+            ).signWith(SignatureAlgorithm.HS256, "mokhs")
+            .compact();
+    printToken(token);
+
+    Jws<Claims> tokenInfo = Jwts.parser().setSigningKey("mokhs").parseClaimsJws(token);
+    System.out.println(tokenInfo);
+}
+
+```
+
+``` java
+void test_java_jwt() {
+    byte[] SEC_KEY = DatatypeConverter.parseBase64Binary("mokhs"); // (1)
+    String token = JWT.create()
+            .withClaim("user_id", "mokhs")
+            .withClaim("price", 3000)
+            .sign(Algorithm.HMAC256(SEC_KEY));
+
+    printToken(token);
+
+    DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC256(SEC_KEY)).build().verify(token);
+
+    System.out.println(decodedJWT.getClaims());
+
+    Jws<Claims> tokenInfo = Jwts.parser().setSigningKey(SEC_KEY).parseClaimsJws(token);
+
+    System.out.println(tokenInfo);
+}
+```
+
+- (1) DatatypeConverter를 이용하면 같은 서로 라이브러리가 다르더라도 같은 키를 이용할 수 있기는 하다.
+### JWT 스펙에서 지정한 claim
+- `iss` : `Issuer` 토큰을 발행한 사람(단체,사이트)이 누구인지
+- `sub` : `Subject` 무엇에 관한 토큰인지
+- `aud` : `Audience` 누구를 대상으로 한 토큰인지
+- `exp` : `Expiration` 토큰의 만료 시간
+- `nbf` : `Not Before` 토큰이 언제부터 유효한지
+- `iat` : `Issued At` 토큰 발행 시간
+- `jti` : `JWT ID` : 토큰 자체의 아이디(식별자) -> 변경 감지 가능
+- 그 밖에 인증에 필요하거나 대상서버에서 필요로 하는 데이터
+
+### 토큰에는 어떤 데이터를 담아야 하는가?
+- 일반적으로 인증에 필요한 최소한의 데이터
+- 다른 사람에게 노출되어도 상관없는 데이터
+- 비밀번호 X, 전화번호 X
+
+### 토큰 관리 
+- 이론적으로 토큰은 클라이언트에서 관리하게 한다.
+- 하지만 실제로 서버에서 사용자 정보 캐싱, 토큰 유효성 검사 그리고 refresh 토큰 정책을 위해서 서버에서 토큰을 관리하기도 한다.
+- 이 경우 토큰과 사용자 정보를 관리하는 방법으로 다음과 같은 방법들을 사용하기도 한다.
+  - 캐시 (redis, hazelcast)
+  - DB 저장
