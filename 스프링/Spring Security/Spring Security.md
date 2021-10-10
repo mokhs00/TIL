@@ -791,6 +791,7 @@ public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEve
 그래서 세션 관리에 헛점이 없도록 기본 구성 내용을 잘 아는 것은 중요하다.
 
 다음은 세션 관리에 관여되는 필터들이다.
+
 ## ConcurrentSessionFilter
 
 - Session은 서블릿 컨테이너(톰켓)에서 제공하는 것이므로 스프링이 제어할 수는 없지만 서블릿 컨테이너가 넘겨주는 세션을 스프링의 SessionRegistry에서 SessionInformation이라는 래퍼 클래스로 관리하고,
@@ -816,12 +817,11 @@ public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEve
     }
 ```
 
-- (1) `세션 생성 정책`을 설정할 수 있음. 보통 ALWAYS나 STATELESS를 사용하며, 거의 건들 일이 없지만, JWT 사용 시 STATELESS 정도를 사용할 수 있다.
+- (1) `세션 생성 정책`을 설정할 수 있음. 보통 ALWAYS나 STATELESS를 사용하며, 거의 건들 일이 없지만, JWT 사용 시 STATELESS(세션을 사용하지 않음) 정도를 사용할 수 있다.
 - (2) `세션 고정 정책`을 설정할 수 있다. changeSessionId()가 기본 값이며, 세션 고정 시 해커가 임의로 자신의 세션을 대상자에게 심어서 자동 로그인에 사용할 수 있으므로 주의해야한다.
 - (3) `세션 최대 수 정책`을 설정할 수 있다.
 - (4) `세션 초과 시 로그인 방지 정책`을 설정할 수 있다.
 - (5) `세션 만료 시 이동할 페이지`를 설정할 수 있다.
-
 
 # 세션 인증 vs 토큰 인증
 
@@ -832,9 +832,10 @@ public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEve
 - 그리고 대표적인 토큰으로 JWT(Json Web Token)가 있다.
 
 ## JWT
+
 - header, body, signature로 구성되어 있다.
 - JWT 자바 라이브러리는 보통 다음 두 가지를 이용한다.
-  - auth0.com 에서 만든 java-jwt 
+  - auth0.com 에서 만든 java-jwt
   - okta 에서 만든 jjwt 라이브러리
 - 두 라이브러리는 signingKey를 사용하는 방식에 차이가 있으니 주의해야한다.
   - java-jwt에서는 key를 그대로 사용하고 JWT는 key를 해싱해서 사용한다.
@@ -875,7 +876,9 @@ void test_java_jwt() {
 ```
 
 - (1) DatatypeConverter를 이용하면 같은 서로 라이브러리가 다르더라도 같은 키를 이용할 수 있기는 하다.
+
 ### JWT 스펙에서 지정한 claim
+
 - `iss` : `Issuer` 토큰을 발행한 사람(단체,사이트)이 누구인지
 - `sub` : `Subject` 무엇에 관한 토큰인지
 - `aud` : `Audience` 누구를 대상으로 한 토큰인지
@@ -886,11 +889,13 @@ void test_java_jwt() {
 - 그 밖에 인증에 필요하거나 대상서버에서 필요로 하는 데이터
 
 ### 토큰에는 어떤 데이터를 담아야 하는가?
+
 - 일반적으로 인증에 필요한 최소한의 데이터
 - 다른 사람에게 노출되어도 상관없는 데이터
 - 비밀번호 X, 전화번호 X
 
-### 토큰 관리 
+### 토큰 관리
+
 - 이론적으로 토큰은 클라이언트에서 관리하게 한다.
 - 하지만 실제로 서버에서 사용자 정보 캐싱, 토큰 유효성 검사 그리고 refresh 토큰 정책을 위해서 서버에서 토큰을 관리하기도 한다.
 - 이 경우 토큰과 사용자 정보를 관리하는 방법으로 다음과 같은 방법들을 사용하기도 한다.
