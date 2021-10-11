@@ -757,7 +757,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ## HttpSessionEventPublisher
 
-ServletListenerRegistrationBean<HttpSessionEventPublisher>를 스프링 빈으로 다음과 같이 등록해서 Session의 생명주기에 대해서 모니터링할 수 있다.
+`ServletListenerRegistrationBean<HttpSessionEventPublisher>`를 스프링 빈으로 다음과 같이 등록해서 Session의 생명주기에 대해서 모니터링할 수 있다.
 
 ``` java
 
