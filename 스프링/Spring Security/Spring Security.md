@@ -35,6 +35,7 @@
     - [JWT 스펙에서 지정한 claim](#jwt-스펙에서-지정한-claim)
     - [토큰에는 어떤 데이터를 담아야 하는가?](#토큰에는-어떤-데이터를-담아야-하는가)
     - [토큰 관리](#토큰-관리)
+    - [Spring Boot에서 JWT 이용하기 (with Spring Security)](#spring-boot에서-jwt-이용하기-with-spring-security)
 
 # Spring Security
 
@@ -901,3 +902,35 @@ void test_java_jwt() {
 - 이 경우 토큰과 사용자 정보를 관리하는 방법으로 다음과 같은 방법들을 사용하기도 한다.
   - 캐시 (redis, hazelcast)
   - DB 저장
+
+
+### Spring Boot에서 JWT 이용하기 (with Spring Security)
+  
+- 먼저 `WebSecurityConfigurerAdapter`에서 session을 사용하지 않을 것이기 때문에 session생성 정책을 STATELESS로 하고
+- `UsernamePasswordAuthenticationFilter`와 `BasicAuthenticationFilter`의 자리에 각각 loginFilter, jwtCheckFilter를 설정합니다.
+  
+``` java
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class AdvancedSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final UserService userService;
+
+    public AdvancedSecurityConfig(SpUserService userService) {
+        this.userService = userService;
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        JWTLoginFilter loginFilter = new JWTLoginFilter(authenticationManager()); 
+        JWTCheckFilter jwtCheckFilter = new JWTCheckFilter(authenticationManager(), userService);
+        http
+                .csrf().disable()
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(jwtCheckFilter, BasicAuthenticationFilter.class);
+    }
+}
+```
