@@ -36,6 +36,7 @@
     - [토큰에는 어떤 데이터를 담아야 하는가?](#토큰에는-어떤-데이터를-담아야-하는가)
     - [토큰 관리](#토큰-관리)
     - [Spring Boot에서 JWT 이용하기 (with Spring Security)](#spring-boot에서-jwt-이용하기-with-spring-security)
+  - [auth_token과 refresh_token 그리고 보안](#auth_token과-refresh_token-그리고-보안)
 
 # Spring Security
 
@@ -907,7 +908,8 @@ void test_java_jwt() {
 ### Spring Boot에서 JWT 이용하기 (with Spring Security)
   
 - 먼저 `WebSecurityConfigurerAdapter`에서 session을 사용하지 않을 것이기 때문에 session생성 정책을 STATELESS로 하고
-- `UsernamePasswordAuthenticationFilter`와 `BasicAuthenticationFilter`의 자리에 각각 loginFilter, jwtCheckFilter를 설정합니다.
+- `UsernamePasswordAuthenticationFilter`와 `BasicAuthenticationFilter`의 자리에 각각 loginFilter, jwtCheckFilter를 설정한다.
+- 상세 구현은 생략
   
 ``` java
 @EnableWebSecurity
@@ -934,3 +936,10 @@ public class AdvancedSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 }
 ```
+
+
+## auth_token과 refresh_token 그리고 보안
+- auth_token을 기본으로 두고 자동로그인 기능을 위해 refresh_token을 두는 방식이 있다.
+- refresh_token을 이용해서 자동로그인 기능을 구현하면 사용자 입장에선 편리하지만, refresh_token이 탈취되면 보안에 매우 취약하다.
+- 이를 보완하기 위해서, 토큰에 대해 추적관리를 하거나 혹은 토큰을 파기할 수 있는 방법을 적용해야한다.
+- ex) `RememberMeAuthenticationFitler`에서 알아본 `PersistentTokenBasedRememberMeServices`처럼 DB에 별도의 데이터를 저장하기
