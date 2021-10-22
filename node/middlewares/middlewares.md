@@ -1,11 +1,11 @@
 - [logger](#logger)
-  - [margan](#margan)
+  - [morgan](#morgan)
 
 # logger
 
 - loggers
 
-## margan
+## morgan
 
 - <https://www.npmjs.com/package/morgan>
 - node.js용 HTTP 요청 logger
