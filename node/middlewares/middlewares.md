@@ -1,5 +1,7 @@
 - [logger](#logger)
   - [morgan](#morgan)
+- [error](#error)
+  - [custom error middleware](#custom-error-middleware)
 
 # logger
 
@@ -22,3 +24,34 @@
     console.log('server is running');
   })
   ```
+
+# error
+
+## custom error middleware
+- error middleware는 매개변수가 4개
+
+``` js
+const express = require("express");
+const app = express();
+
+function commonMiddleware(req, res, next) {
+  console.log("commonMiddleware");
+  next(new Error("error"));
+}
+
+function errorMiddleware(err, req, res, next) {
+  console.log(err.message);
+  next();
+}
+
+app.use(commonMiddleware);
+app.use(errorMiddleware);
+
+
+
+app.listen(3000, function () {
+  console.log("server is running");
+});
+
+
+```
