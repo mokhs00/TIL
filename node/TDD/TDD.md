@@ -91,7 +91,10 @@ describe("GET /users는", () => {
           done();
         });
     });
+  });
+});
 
+describe("POST /users는", () => {
     // post
     it("user 추가", (done) => {
       request(app)
@@ -102,9 +105,7 @@ describe("GET /users는", () => {
           res.body.should.have.property('id');
           done();
         });
-    });
-  });
-  
+    });  
 });
 
 
