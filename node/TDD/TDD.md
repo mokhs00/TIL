@@ -3,17 +3,21 @@
 TEST, TDD 관련된 내용을 정리합니다.
 
 - [개요](#개요)
-- [mocha](#mocha)
-  - [Example](#example)
+- [단위 테스트](#단위-테스트)
+  - [mocha](#mocha)
+    - [Example](#example)
   - [should](#should)
+- [통합 테스트](#통합-테스트)
+  - [supertest](#supertest)
 
-# mocha
+# 단위 테스트
+## mocha
 
 - 테스트 코드를 돌려주는 테스트 러너
 - 테스트 수트 : 테스트 환경으로 모카에서는 describe()으로 구현
 - 테스트 케이스 실제 테스트를 말하며, 모카에서는 it()으로 구현한다.
 
-## Example
+### Example
 
 ``` js
 const utils = require('./utils')
@@ -68,3 +72,30 @@ describe("utils.js capitialize() 함수는", () => {
 ```
 
 
+# 통합 테스트
+
+## supertest
+
+- api 기능 test module
+- 예시 코드는 다음과 같음
+  
+``` js
+const request = require("supertest");
+const should = require("should");
+const { app } = require("./app");
+
+describe("GET /users는", () => {
+  describe("성공 시", () => {
+    it("get users response", (done) => {
+      request(app)
+        .get("/users")
+        .end((err, res) => {
+          res.body.should.be.instanceOf(Array);
+          done();
+        });
+    });
+  });
+});
+
+
+```
