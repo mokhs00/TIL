@@ -11,11 +11,12 @@ TEST, TDD 관련된 내용을 정리합니다.
   - [supertest](#supertest)
 
 # 단위 테스트
+
 ## mocha
 
 - 테스트 코드를 돌려주는 테스트 러너
-- 테스트 수트 : 테스트 환경으로 모카에서는 describe()으로 구현
-- 테스트 케이스 실제 테스트를 말하며, 모카에서는 it()으로 구현한다.
+- 테스트 수트(test suite) : 테스트 환경으로 모카에서는 describe()으로 구현
+- 테스트 케이스(test) : 실제 테스트를 말하며, 모카에서는 it()으로 구현한다.
 
 ### Example
 
@@ -30,7 +31,6 @@ describe('utils.js capitialize() 함수는', () => {
   })
 })
 ```
-
 
 ## should
 
@@ -51,10 +51,7 @@ describe('utils.js capitialize() 함수는', () => {
   })
 })
 
-
-
 ```
-
 
 should를 사용한 코드
 
@@ -71,7 +68,6 @@ describe("utils.js capitialize() 함수는", () => {
 
 ```
 
-
 # 통합 테스트
 
 ## supertest
@@ -86,6 +82,7 @@ const { app } = require("./app");
 
 describe("GET /users는", () => {
   describe("성공 시", () => {
+    // get
     it("get users response", (done) => {
       request(app)
         .get("/users")
@@ -94,7 +91,20 @@ describe("GET /users는", () => {
           done();
         });
     });
+
+    // post
+    it("user 추가", (done) => {
+      request(app)
+        .post("/users")
+        .send({ name: "mokhs" })
+        .expect(201)
+        .end((err, res) => {
+          res.body.should.have.property('id');
+          done();
+        });
+    });
   });
+  
 });
 
 
