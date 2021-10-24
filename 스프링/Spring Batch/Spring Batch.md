@@ -23,7 +23,7 @@
 
 # 스프링 배치 아키텍쳐
 
-![./Spring Batch/image1.png](./Spring%20batch/image1.png)
+![./Spring Batch/image1.png](./Spring%20Batch/image1.png)
 
 - `Job`
   - Job은 **배치의 실행 단위**를 의미하고, Job은 N개의 Step을 실행할 수 있으며, 흐름(FLOW)를 관리할 수 있음.
