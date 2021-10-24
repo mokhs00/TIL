@@ -73,6 +73,8 @@ describe("utils.js capitialize() 함수는", () => {
 ## supertest
 
 - api 기능 test module
+- 중요 ‼ supertest의 `request(app)`은 내부적으로 express app server를 구동하므로 중복 구동이 되지 않도록 주의. 이는 파일 구조를 조금 변경해서 커버 가능
+  - ex) app.js는 app을 app.listen()을 실행하지 않은 app을 export하고 server.js에서 app.listen()를 실행
 - 예시 코드는 다음과 같음
   
 ``` js
