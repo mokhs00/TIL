@@ -219,7 +219,7 @@ return 값 형식은 다음과 같다
 
 
 ``` js
-@Get(github)
+@Get('github')
 @Redirect('https://github.com/mokhs00', 302)
 toGithub(@Query('name') name){
   if(name){
@@ -233,7 +233,7 @@ toGithub(@Query('name') name){
 `@Param()`을 이용해서 path parameter 가져오기 가능
 
 ``` js
-@Get(:id)
+@Get(':id')
 findOne(@Param() params): string {
   return `This action returns a ${params.id}`
 }
@@ -242,7 +242,7 @@ findOne(@Param() params): string {
 아래 방식도 가능
 
 ``` js
-@Get(:id)
+@Get(':id')
 findOne(@Param('id') id): string {
   return `This action returns a ${id}`
 }
@@ -250,6 +250,30 @@ findOne(@Param('id') id): string {
 
 
 ### Sub-Domain Routing
+
+- `@Controller` 데코레이터에 host option을 사용해 HTTP 호스트가 특정값과 일치하도록 할 수 있다.
+
+``` ts
+@Controller({ host: 'admin.example.com' })
+export class AdminController {
+  @Get()
+  index(): string {
+    return 'Admin page';
+  }
+}
+```
+
+- 아래와 같이 `@HostParam`을 이용해서 동적값을 캡처할 수도 있다.
+
+``` ts
+@Controller({ host: ':account.example.com' })
+export class AccountController {
+  @Get()
+  getInfo(@HostParam('account') account: string) {
+    return account;
+  }
+}
+```
 
 ## Nest CLI로 Controller 빠르게 생성하기
 
