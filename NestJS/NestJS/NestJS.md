@@ -14,6 +14,8 @@
     - [Route parameters](#route-parameters)
     - [Sub-Domain Routing](#sub-domain-routing)
   - [Nest CLI로 Controller 빠르게 생성하기](#nest-cli로-controller-빠르게-생성하기)
+- [Providers](#providers)
+  - [Services](#services)
 
 # 개요
 NestJS에 대해서 학습합니다.
@@ -301,5 +303,64 @@ import { HomeController } from './home/home.controller';
   providers: [AppService],
 })
 export class AppModule {}
+
+```
+
+
+# Providers
+
+- 프로바이더는 Nest의 기본 개념이며, 서비스, 리포지토리, 팩토리, 헬퍼 등 대부분의 기본 Nest 클래스는 프로바이더로 취급될 수 있다.
+- 프로바이더의 주요 아이디어는 종속성을 주입할 수 있다는 것이고, Spring에서 Spring Bean을 주입하는 것과 유사하다는 느낌이 든다.
+- `@Injectable` 데코레이터를 붙여서 `Provider`로 선언한다. 
+- 이는 Nest IoC 컨테이너가 관리할 수 있는 클래스임을 선언하는 메타데이터를 첨부한다.
+
+## Services
+
+- 다음은 `Service layer`의 코드를 `Controller`에서 생성자 주입 받는 코드이다.
+- Controller에서 생성자에 private를 선언하여 주입 받는 것을 확인하자. 이는 약식(shorthand = 줄임말)으로 사용된다고 한다.
+ 
+``` ts
+// dogs.service.ts
+
+import { Injectable } from '@nestjs/common';
+import { Dog } from 'interfaces/dogs.interface';
+
+@Injectable()
+export class DogsService {
+  private readonly dogs: Dog[] = [];
+
+  create(dog: Dog) {
+    this.dogs.push(dog);
+  }
+
+  findAll(): Dog[] {
+    return this.dogs;
+  }
+}
+```
+
+
+``` ts
+// dogs.controller.ts
+
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Dog } from 'src/dogs/dogs.interface';
+import { CreateDogDto } from './create-dog.dto';
+import { DogsService } from './dogs.service';
+
+@Controller('dogs')
+export class DogsController {
+  constructor(private readonly dogsService: DogsService) { }
+
+  @Post()
+  async create(@Body() createDogDto: CreateDogDto) {
+    this.dogsService.create(createDogDto);
+  }
+
+  @Get()
+  async findAll(): Promise<Dog[]> {
+    return this.dogsService.findAll();
+  }
+}
 
 ```
