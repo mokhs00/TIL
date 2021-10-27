@@ -16,8 +16,15 @@
   - [Nest CLI로 Controller 빠르게 생성하기](#nest-cli로-controller-빠르게-생성하기)
 - [Providers](#providers)
   - [Services](#services)
+  - [Dependency injection](#dependency-injection)
+  - [Scopes](#scopes)
+  - [Custom Providers](#custom-providers)
+  - [Optional Providers](#optional-providers)
+  - [Property-based injection](#property-based-injection)
+  - [Provider registration](#provider-registration)
 
 # 개요
+
 NestJS에 대해서 학습합니다.
 
 # 시작
@@ -172,6 +179,7 @@ response status code를 다음과 같이 간단하게 설정 가능하다.
 
 `@HttpCode(200)`
 `@HttpCode(HttpStatus.OK)`
+
 ``` js
 import { Controller, HttpCode, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
@@ -219,7 +227,6 @@ return 값 형식은 다음과 같다
 }
 ```
 
-
 ``` js
 @Get('github')
 @Redirect('https://github.com/mokhs00', 302)
@@ -249,7 +256,6 @@ findOne(@Param('id') id): string {
   return `This action returns a ${id}`
 }
 ```
-
 
 ### Sub-Domain Routing
 
@@ -306,19 +312,18 @@ export class AppModule {}
 
 ```
 
-
 # Providers
 
 - 프로바이더는 Nest의 기본 개념이며, 서비스, 리포지토리, 팩토리, 헬퍼 등 대부분의 기본 Nest 클래스는 프로바이더로 취급될 수 있다.
 - 프로바이더의 주요 아이디어는 종속성을 주입할 수 있다는 것이고, Spring에서 Spring Bean을 주입하는 것과 유사하다는 느낌이 든다.
-- `@Injectable` 데코레이터를 붙여서 `Provider`로 선언한다. 
+- `@Injectable` 데코레이터를 붙여서 `Provider`로 선언한다.
 - 이는 Nest IoC 컨테이너가 관리할 수 있는 클래스임을 선언하는 메타데이터를 첨부한다.
 
 ## Services
 
 - 다음은 `Service layer`의 코드를 `Controller`에서 생성자 주입 받는 코드이다.
 - Controller에서 생성자에 private를 선언하여 주입 받는 것을 확인하자. 이는 약식(shorthand = 줄임말)으로 사용된다고 한다.
- 
+
 ``` ts
 // dogs.service.ts
 
@@ -338,7 +343,6 @@ export class DogsService {
   }
 }
 ```
-
 
 ``` ts
 // dogs.controller.ts
@@ -363,4 +367,102 @@ export class DogsController {
   }
 }
 
+```
+
+## Dependency injection
+
+- 위에서 살펴본 것처럼 다음과 같이 작성하면 Nest에서 생성자 Dependency Injection(의존성 주입)을 받을 수 있다.
+- 물론 spring 과 유사하게 필드 주입도 가능하겠지만, 이는 이후에 다룬다.
+
+``` ts
+constructor(private dogsService: DogsService) {}
+```
+
+
+## Scopes
+
+- Provider는 일반적으로 애플리케이션 수명주기와 동기화된 수명(범위=scope)를 갖는다.
+- 애플리케이션이 `bootstrap`되면, 모든 종속성을 해결해야하므로 모든 `provider`를 인스턴스화 해야하고, 당연한 얘기지만, 애플리케이션이 종료되면 각 `provider`는 메모리에서 제거된다.
+- 그러나 이러한 provider의 수명을 요청 범위로 만드는 방법도 있다고 한다. 이는 이후 `Injection Scope`에서 다룬다.
+
+
+## Custom Providers
+
+- 프로바이더를 정의하는 방법에는 여러가지가 있고, 일반 값, 클래스 및 비동기 또는 동기 팩토리를 사용할 수 있다. 이는 이후 `Custom Provider`에서 다룬다.
+
+## Optional Providers
+
+- 경우에 따라 반드시 필요하지 않은 종속성이 있을 수 있다. 
+- 예를 들어, 구성 객체에 종속될 순 있지만, 전달되는 것이 없으면 기본 값을 사용해야하는 경우를 들 수 있다.
+- 프로바이더가 선택사항임을 나타내려면 생성자에 `@Optional()` 데코레이터를 사용하자.
+- 아래 예시는 `HTTP_OPTIONS`라는 커스텀 토큰을 포함한다. 
+- 커스텀 프로바이더 및 관련 토큰에 대한 내용은 이후 `Custom Provider`에서 다룬다.
+
+``` ts
+
+import { Injectable, Optional, Inject } from '@nestjs/common';
+
+@Injectable()
+export class HttpService<T> {
+  constructor(@Optional() @Inject('HTTP_OPTIONS') private httpClient: T) {}
+}
+```
+
+
+## Property-based injection
+
+- 속성 기반 의존성 주입도 가능하다.
+- 클래스 상속의 경우에 최상위 클래스가 여러 프로바이더에 의존하는 경우 생성자의 하위 클래스에서 `super()`를 호출하여 모든 프로바이더를 전달하는 것은 매우 지루할 수 있다.
+- 이를 방지하기 위해서 속성 수준에서 의존성 주입이 가능하도록 `@Inject` 데코레이터를 지원한다.
+- **하지만 클래스가 다른 프로바이더를 확장하지 않는 경우 생성자 기반 주입을 선호해야함을 주의하자.**
+
+``` ts
+import { Injectable, Inject } from '@nestjs/common'
+
+@Injectable()
+export class HttpService<T> {
+  @Inject('HTTP_OPTIONS')
+  private readonly httpCliect: T;
+}
+
+```
+
+
+## Provider registration
+
+- Provider를 정의했으니 Nest의 컨테이너에서 이를 관리할 수 있도록 설정해주어야 한다.
+- 다음과 같이 모듈 파일의 `@Module` 데코레이터의 `providers` 배열에 해당 Provider를 추가하자.
+- 여기서는 DogsService를 Provider로 추가했다.
+
+``` ts
+// dogs.module.ts
+
+import { Module } from '@nestjs/common';
+import { DogsService } from './dogs.service';
+import { DogsController } from './dogs.controller';
+
+@Module({
+  controllers: [DogsController],
+  providers: [DogsService]
+})
+export class DogsModule {}
+```
+
+- 추가로 최상위 모듈에선 다음과 같이 하위 모듈을 추가한다. 
+- @Module의 imports에 DogsModule을 확인하자.
+
+
+``` ts
+// app.module.ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DogsModule } from './dogs/dogs.module';
+
+@Module({
+  imports: [DogsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
 ```
