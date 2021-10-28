@@ -379,13 +379,11 @@ export class DogsController {
 constructor(private dogsService: DogsService) {}
 ```
 
-
 ## Scopes
 
 - Provider는 일반적으로 애플리케이션 수명주기와 동기화된 수명(범위=scope)를 갖는다.
 - 애플리케이션이 `bootstrap`되면, 모든 종속성을 해결해야하므로 모든 `provider`를 인스턴스화 해야하고, 당연한 얘기지만, 애플리케이션이 종료되면 각 `provider`는 메모리에서 제거된다.
 - 그러나 이러한 provider의 수명을 요청 범위로 만드는 방법도 있다고 한다. 이는 이후 `Injection Scope`에서 다룬다.
-
 
 ## Custom Providers
 
@@ -393,10 +391,10 @@ constructor(private dogsService: DogsService) {}
 
 ## Optional Providers
 
-- 경우에 따라 반드시 필요하지 않은 종속성이 있을 수 있다. 
+- 경우에 따라 반드시 필요하지 않은 종속성이 있을 수 있다.
 - 예를 들어, 구성 객체에 종속될 순 있지만, 전달되는 것이 없으면 기본 값을 사용해야하는 경우를 들 수 있다.
 - 프로바이더가 선택사항임을 나타내려면 생성자에 `@Optional()` 데코레이터를 사용하자.
-- 아래 예시는 `HTTP_OPTIONS`라는 커스텀 토큰을 포함한다. 
+- 아래 예시는 `HTTP_OPTIONS`라는 커스텀 토큰을 포함한다.
 - 커스텀 프로바이더 및 관련 토큰에 대한 내용은 이후 `Custom Provider`에서 다룬다.
 
 ``` ts
@@ -408,7 +406,6 @@ export class HttpService<T> {
   constructor(@Optional() @Inject('HTTP_OPTIONS') private httpClient: T) {}
 }
 ```
-
 
 ## Property-based injection
 
@@ -427,7 +424,6 @@ export class HttpService<T> {
 }
 
 ```
-
 
 ## Provider registration
 
@@ -449,9 +445,8 @@ import { DogsController } from './dogs.controller';
 export class DogsModule {}
 ```
 
-- 추가로 최상위 모듈에선 다음과 같이 하위 모듈을 추가한다. 
+- 추가로 최상위 모듈에선 다음과 같이 하위 모듈을 추가한다.
 - @Module의 imports에 DogsModule을 확인하자.
-
 
 ``` ts
 // app.module.ts
@@ -468,7 +463,6 @@ import { DogsModule } from './dogs/dogs.module';
 export class AppModule {}
 ```
 
-
 # Modules
 
 - Nest에서 모듈이란 `@Module` 데코레이터로 주석이 달린 클래스를 말한다.
@@ -480,7 +474,6 @@ export class AppModule {}
 - Nest 공식 문서에선 모듈은 구성요소를 구성하는 효과적인 방법으로 적극 권장한다고. 강조되어있다.
 - 아키텍처에 따라 모듈을 잘 캡슐화하여서 구성하는 것이 중요하다.
 
-
 `@Module()` 데코레이터는 속성이 모듈을 설명하는 단일 객체를 매개변수로 받는다. 해당 매개변수는 다음과 같다.
 
 | 매개변수      | 설명                                                                          |
@@ -490,4 +483,4 @@ export class AppModule {}
 | `imports`     | 이 모듈에 필요한 프로바이더를 내보내는 다른 모듈 = import 해야하는 모듈 목록  | `exports` | 이 모듈에서 제공하고, 이 모듈을 import하는 다른 모듈에서 사용할 수 있어야하는 provider 집합 |
 
 **모듈은 기본적으로 provider를 캡슐화하고, 현재 모듈에 직접 포함되거나 가져온 모듈에서 내보내지 않은 프로바이더를 삽입할 수 없다.
-따라서 모듈에서 내보낸 프로바이더를 모듈의 공용 인터페이스 또는 API로 간주할 수 있따.**
+따라서 모듈에서 내보낸 프로바이더를 모듈의 공용 인터페이스 또는 API로 간주할 수 있다.**
