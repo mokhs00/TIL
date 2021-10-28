@@ -22,6 +22,7 @@
   - [Optional Providers](#optional-providers)
   - [Property-based injection](#property-based-injection)
   - [Provider registration](#provider-registration)
+- [Modules](#modules)
 
 # 개요
 
@@ -466,3 +467,27 @@ import { DogsModule } from './dogs/dogs.module';
 })
 export class AppModule {}
 ```
+
+
+# Modules
+
+- Nest에서 모듈이란 `@Module` 데코레이터로 주석이 달린 클래스를 말한다.
+- `@Module()` 데코레이터는 Nest가 애플리케이션 구조를 구성하는데 사용하는 메타데이터를 제공한다(설정)
+
+- 각 애플리케이션에는 `루트 모듈(root module)`이라는 하나 이상의 모듈이 존재한다.
+- **루트 모듈은 Nest가 애플리케이션 그래프를 빌드하는데 사용하는 시작점이며**
+- **Nest가 모듈과 공급자 관계 및 종속성을 해결하는데 사용하는 내부 데이터 구조이다.**
+- Nest 공식 문서에선 모듈은 구성요소를 구성하는 효과적인 방법으로 적극 권장한다고. 강조되어있다.
+- 아키텍처에 따라 모듈을 잘 캡슐화하여서 구성하는 것이 중요하다.
+
+
+`@Module()` 데코레이터는 속성이 모듈을 설명하는 단일 객체를 매개변수로 받는다. 해당 매개변수는 다음과 같다.
+
+| 매개변수      | 설명                                                                          |
+| ------------- | ----------------------------------------------------------------------------- |
+| `providers`   | Nest 인젝터에 의해 인스턴스화 되고 적어도 이 모듈에서 공유될 수 있는 provider |
+| `controllers` | 인스턴스화 되어야하는 해당 모듈에 정의된 컨트롤러                             |
+| `imports`     | 이 모듈에 필요한 프로바이더를 내보내는 다른 모듈 = import 해야하는 모듈 목록  | `exports` | 이 모듈에서 제공하고, 이 모듈을 import하는 다른 모듈에서 사용할 수 있어야하는 provider 집합 |
+
+**모듈은 기본적으로 provider를 캡슐화하고, 현재 모듈에 직접 포함되거나 가져온 모듈에서 내보내지 않은 프로바이더를 삽입할 수 없다.
+따라서 모듈에서 내보낸 프로바이더를 모듈의 공용 인터페이스 또는 API로 간주할 수 있따.**
