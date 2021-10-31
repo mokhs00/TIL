@@ -23,6 +23,7 @@
   - [Property-based injection](#property-based-injection)
   - [Provider registration](#provider-registration)
 - [Modules](#modules)
+  - [Shared modules](#shared-modules)
 
 # 개요
 
@@ -485,3 +486,26 @@ export class AppModule {}
 
 **모듈은 기본적으로 provider를 캡슐화하고, 현재 모듈에 직접 포함되거나 가져온 모듈에서 내보내지 않은 프로바이더를 삽입할 수 없다.
 따라서 모듈에서 내보낸 프로바이더를 모듈의 공용 인터페이스 또는 API로 간주할 수 있다.**
+
+
+## Shared modules
+
+- Nest에서 모듈은 기본적으로 **싱글톤**이므로 여러 모듈간에 쉽게 프로바이더의 동일한 인스턴스를 공유할 수 있다.
+- 모든 모듈은 자동으로 공유 모듈이며, 인스턴스화되면, 모든 모듈에서 재사용할 수 있다. 
+- `@Module()` 데코레이터의 옵션에 exports와 imports를 통해서 모듈을 공유할 수 있다.
+- 만약에 DogsService를 다른 모듈에서 공유하고 싶다면 다음과 같이 하면 된다.
+  
+``` ts
+// dogs.module.ts
+
+import { Module } from '@nestjs/common';
+import { DogsService } from './dogs.service';
+import { DogsController } from './dogs.controller';
+
+@Module({
+  controllers: [DogsController],
+  providers: [DogsService],
+  exports: [DogsService]
+})
+export class DogsModule {}
+```
