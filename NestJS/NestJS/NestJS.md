@@ -24,6 +24,7 @@
   - [Provider registration](#provider-registration)
 - [Modules](#modules)
   - [Shared modules](#shared-modules)
+  - [Module re-exporting](#module-re-exporting)
 
 # 개요
 
@@ -508,4 +509,18 @@ import { DogsController } from './dogs.controller';
   exports: [DogsService]
 })
 export class DogsModule {}
+```
+
+## Module re-exporting
+
+- 모듈은 exports 옵션을 통해 내부 프로바이더를 외부로 내보낼 수 있다.
+- 또한, 가져온 모듈을 다시 내보낼 수도 있는데, 이 예시는 다음과 같다.
+
+``` ts
+@Module({
+  imports: [CommonModule],
+  exports: [CommonModule],
+})
+export class CoreModule {}
+
 ```
