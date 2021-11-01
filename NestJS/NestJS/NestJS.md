@@ -25,6 +25,7 @@
 - [Modules](#modules)
   - [Shared modules](#shared-modules)
   - [Module re-exporting](#module-re-exporting)
+  - [Module Dependency injection](#module-dependency-injection)
 
 # 개요
 
@@ -523,4 +524,26 @@ export class DogsModule {}
 })
 export class CoreModule {}
 
+```
+
+## Module Dependency injection
+
+모듈 클래스에 다음과 같이 프로바이더를 주입할 수 있다.
+
+하지만, `순환 종속성`으로 인해 모듈 클래스 자체는 프로바이더로 주입될 수 없다.
+
+``` ts
+// dogs.module.ts
+
+import { Module } from '@nestjs/common';
+import { DogsService } from './dogs.service';
+import { DogsController } from './dogs.controller';
+
+@Module({
+  controllers: [DogsController],
+  providers: [DogsService],
+})
+export class DogsModule {
+  constructor(private dogsService: DogsService) {}
+}
 ```
