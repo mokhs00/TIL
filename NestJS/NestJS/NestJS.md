@@ -26,6 +26,7 @@
   - [Shared modules](#shared-modules)
   - [Module re-exporting](#module-re-exporting)
   - [Module Dependency injection](#module-dependency-injection)
+  - [Global modules](#global-modules)
 
 # 개요
 
@@ -546,4 +547,29 @@ import { DogsController } from './dogs.controller';
 export class DogsModule {
   constructor(private dogsService: DogsService) {}
 }
+```
+
+
+## Global modules
+
+- 모든 곳에서 동일한 모듈을 가져와야한다면, 일일히 설정해주는 것은 힘들 수 있다. 
+- 이런 경우 해당 모듈을 다음과 같이 `@Global` 데코레이터를 이용해 전역 모듈로 설정해줄 수 있다.
+- **단, 주의해야할 점은 전역 모듈은 일반적으로 루트 또는 코어 모듈에서 한번만 등록해야하고**
+- **모든 모듈을 전역 모듈로 설정하는 것은 결코 좋은 디자인이 아니라는 것을 명심하자.**
+
+``` ts
+// dogs.module.ts
+
+import { Module, Global } from '@nestjs/common';
+import { DogsService } from './dogs.service';
+import { DogsController } from './dogs.controller';
+
+@Global()
+@Module({
+  controllers: [DogsController],
+  providers: [DogsService],
+  exports: [DogsService]
+})
+export class DogsModule {}
+
 ```
