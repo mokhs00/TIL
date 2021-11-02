@@ -27,6 +27,7 @@
   - [Module re-exporting](#module-re-exporting)
   - [Module Dependency injection](#module-dependency-injection)
   - [Global modules](#global-modules)
+  - [Dynamic modules](#dynamic-modules)
 
 # 개요
 
@@ -572,4 +573,42 @@ import { DogsController } from './dogs.controller';
 })
 export class DogsModule {}
 
+```
+
+## Dynamic modules
+
+- Nest의 모듈 시스템은 `동적 모듈(Dynamic module)`이라는 강력한 기능을 제공한다.
+- 이 기능을 사용하면, 프로바이더를 동적으로 등록하고, 구성할 수 있는 커스텀 가능한 모듈을 쉽게 만들 수 있다. 이후에 동적 모듈에 대해 자세히 다룰 예정이다.
+- 다음은 동적 모듈의 간단한 예시이다.
+- 아래 코드를 보면 `DatabaseModule.forRoot()`를 이용해 entity에 대한 `DatabsaseProvider`를 동적으로 로딩하는 걸 볼 수 있다.
+
+``` ts
+import { Module, DynamicModule } from '@nestjs/common';
+import { createDatabaseProviders } from './database.providers';
+import { Connection } from './connection.provider';
+
+@Module({
+  providers: [Connection],
+})
+export class DatabaseModule {
+  static forRoot(entities = [], options?): DynamicModule {
+    const providers = createDatabaseProviders(options, entities);
+    return {
+      module: DatabaseModule,
+      providers: providers,
+      exports: providers,
+    };
+  }
+}
+```
+
+``` ts
+import { Module } from '@nestjs/common';
+import { DatabaseModule } from './database/database.module';
+import { User } from './users/entities/user.entity';
+
+@Module({
+  imports: [DatabaseModule.forRoot([User])],
+})
+export class AppModule {}
 ```
