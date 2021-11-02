@@ -31,6 +31,7 @@
 - [Middleware](#middleware)
   - [Middleware Dependency Injection](#middleware-dependency-injection)
   - [Applying middleware](#applying-middleware)
+  - [Route wildcards](#route-wildcards)
 
 # 개요
 
@@ -705,3 +706,12 @@ export class AppModule implements NestModule {
   }
 }
 ```
+
+
+## Route wildcards
+
+nest는 정규표현식 패턴 기반 라우팅도 지원한다. 다음과 같이 `*`를 사용해 모든 문자 조합을 허용할 수 있다.
+
+`forRoutes({ path: "a*b", method: RequestMethod.ALL})`
+
+`"a*b"`는 `a_b`, `acb` 등과 일치하고, `?`, `+`, `*`, `()`문자는 정규표현식 대응 부분이며, 라우트 경로에 사용할 수 있다. 단, `-`과 `.`은 문자열 기반 경로로 문자 그대로 해석된다.
