@@ -28,6 +28,7 @@
   - [Module Dependency injection](#module-dependency-injection)
   - [Global modules](#global-modules)
   - [Dynamic modules](#dynamic-modules)
+- [Middleware](#middleware)
 
 # 개요
 
@@ -491,11 +492,10 @@ export class AppModule {}
 **모듈은 기본적으로 provider를 캡슐화하고, 현재 모듈에 직접 포함되거나 가져온 모듈에서 내보내지 않은 프로바이더를 삽입할 수 없다.
 따라서 모듈에서 내보낸 프로바이더를 모듈의 공용 인터페이스 또는 API로 간주할 수 있다.**
 
-
 ## Shared modules
 
 - Nest에서 모듈은 기본적으로 **싱글톤**이므로 여러 모듈간에 쉽게 프로바이더의 동일한 인스턴스를 공유할 수 있다.
-- 모든 모듈은 자동으로 공유 모듈이며, 인스턴스화되면, 모든 모듈에서 재사용할 수 있다. 
+- 모든 모듈은 자동으로 공유 모듈이며, 인스턴스화되면, 모든 모듈에서 재사용할 수 있다.
 - `@Module()` 데코레이터의 옵션에 exports와 imports를 통해서 모듈을 공유할 수 있다.
 - 만약에 DogsService를 다른 모듈에서 공유하고 싶다면 다음과 같이 하면 된다.
   
@@ -550,10 +550,9 @@ export class DogsModule {
 }
 ```
 
-
 ## Global modules
 
-- 모든 곳에서 동일한 모듈을 가져와야한다면, 일일히 설정해주는 것은 힘들 수 있다. 
+- 모든 곳에서 동일한 모듈을 가져와야한다면, 일일히 설정해주는 것은 힘들 수 있다.
 - 이런 경우 해당 모듈을 다음과 같이 `@Global` 데코레이터를 이용해 전역 모듈로 설정해줄 수 있다.
 - **단, 주의해야할 점은 전역 모듈은 일반적으로 루트 또는 코어 모듈에서 한번만 등록해야하고**
 - **모든 모듈을 전역 모듈로 설정하는 것은 결코 좋은 디자인이 아니라는 것을 명심하자.**
@@ -611,4 +610,30 @@ import { User } from './users/entities/user.entity';
   imports: [DatabaseModule.forRoot([User])],
 })
 export class AppModule {}
+```
+
+# Middleware
+
+- 미들웨어는 라우트 핸들러 이전에 호출되는 함수를 말하며, Nest의 미들웨어는 기본적으로 express 미들웨어와 동일하다.
+- 미들웨어는 다음과 같은 작업을 수행할 수 있다.
+  - **추가 코드를 실행**
+  - **요청 및 응답 객체를 변경**
+  - **요청-응답 사이클을 종료**
+  - **스택의 next 미들웨어를 호출 (다음 순서의 미들웨어. 미들웨어를 여러개 두는 경우.)**
+  - **현재 미들웨어 함수가 요청-응답주기를 종료하지 않으면 next()를 호출하여 next 미들웨어 기능에 제어를 전달해야만 하고, 그렇지 않으면 해당 요청은 보류 상태가 되어서 종료되지 않을 수 있다.**
+
+커스텀 Nest 미들웨어는 함수 또는 `@Injectable()` 데코레이터가 있는 클래스로 구현할 수 있다.
+클래스의 경우 `NestMiddleware` 인터페이스를 구현해야하지만, 함수는 특별한 요구사항이 없다.
+다음은 클래스 방식으로 간단한 커스텀 미들웨어를 구현한 것이다.
+
+``` ts
+import { NestMiddleware } from '@nestjs/common';
+import { NextFunction } from 'express';
+
+export class LoggerMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    console.log('[Request] LOG TEST');
+    next();
+  }
+}
 ```
