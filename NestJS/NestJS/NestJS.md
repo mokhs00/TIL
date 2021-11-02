@@ -29,6 +29,8 @@
   - [Global modules](#global-modules)
   - [Dynamic modules](#dynamic-modules)
 - [Middleware](#middleware)
+  - [Middleware Dependency Injection](#middleware-dependency-injection)
+  - [Applying middleware](#applying-middleware)
 
 # 개요
 
@@ -634,6 +636,72 @@ export class LoggerMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     console.log('[Request] LOG TEST');
     next();
+  }
+}
+```
+
+## Middleware Dependency Injection
+
+Middleware 또한 DI(Dependency Injection)가 가능하다.
+Nest에서는 생성자 주입을 추천한다.
+
+
+## Applying middleware
+
+- `@Module()` 데코레이터 옵션에는 미들웨어를 설정할 수 없다.
+- 대신에 모듈 클래스의 configure 메서드를 사용하여 설정한다. 
+- 미들웨어를 포함하는 모듈은 NestModule 인터페이스를 상속받아 구현해야한다.
+- 다음 예시 코드를 확인하자.
+
+``` ts
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { LoggerMiddleware } from 'middleware/logger.middleware';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DogsModule } from './dogs/dogs.module';
+
+@Module({
+  imports: [DogsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware) // (1)
+      .forRoutes('dogs'); // (2)
+  }
+}
+```
+
+- (1) middleware 설정
+- (2) 설정한 middleware를 적용할 route 경로 설정
+
+
+또한, forRoutes() 메서드의 매개변수로 객체를 전달할 수 있는데, `path`, `method`를 다음과 같이 사용해서 특정 path와 특정 http method에 미들웨어를 적용할 수 있다.
+
+``` ts
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { LoggerMiddleware } from 'middleware/logger.middleware';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DogsModule } from './dogs/dogs.module';
+
+@Module({
+  imports: [DogsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes({ path: 'dogs', method: RequestMethod.GET });
   }
 }
 ```
