@@ -33,6 +33,7 @@
   - [Applying middleware](#applying-middleware)
   - [Route wildcards](#route-wildcards)
   - [Middleware consumer](#middleware-consumer)
+  - [Excluding routes](#excluding-routes)
 
 # 개요
 
@@ -750,6 +751,44 @@ export class AppModule implements NestModule {
       .forRoutes(DogsController);
   }
 }
+```
 
+## Excluding routes
+
+특정 API 경로는 미들웨어 적용을 제외할 수도 있다. `exclude()` 메서드를 이용해 특정 API 경로를 쉽게 제외할 수 있다.
+
+- 다음은 `exlcude()` 메서드 사용 예시이다.
+- 매개변수로는 `단일 문자열`, `여러 문자열`, 또는 `RouteInfo` 객체를 사용할 수 있다.
+- `exclude()` 메서드는 [path-to-regexp](https://github.com/pillarjs/path-to-regexp#parameters) 패키지를 사용하여 아래 예시의 `dogs/(.*)`와 같이 와일드 카드를 매개변수로 지원한다.
+
+``` ts
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { LoggerMiddleware } from 'middleware/logger.middleware';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DogsController } from './dogs/dogs.controller';
+import { DogsModule } from './dogs/dogs.module';
+
+@Module({
+  imports: [DogsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .exclude(
+        { path: 'dogs', method: RequestMethod.GET }, 
+        'dogs/(.*)'
+      )
+      .forRoutes(DogsController);
+  }
+}
 
 ```
