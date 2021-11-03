@@ -32,6 +32,7 @@
   - [Middleware Dependency Injection](#middleware-dependency-injection)
   - [Applying middleware](#applying-middleware)
   - [Route wildcards](#route-wildcards)
+  - [Middleware consumer](#middleware-consumer)
 
 # 개요
 
@@ -715,3 +716,40 @@ nest는 정규표현식 패턴 기반 라우팅도 지원한다. 다음과 같�
 `forRoutes({ path: "a*b", method: RequestMethod.ALL})`
 
 `"a*b"`는 `a_b`, `acb` 등과 일치하고, `?`, `+`, `*`, `()`문자는 정규표현식 대응 부분이며, 라우트 경로에 사용할 수 있다. 단, `-`과 `.`은 문자열 기반 경로로 문자 그대로 해석된다.
+
+
+## Middleware consumer
+
+다음 코드에서 `NestModule`의 구현체인 `AppModule`의 생성자 매개변수에 `consumer`의 타입이 `MiddlewareConsumer`인 걸 볼 수 있다.
+
+- `MiddlewareConsumer`는 미들웨어를 관리하기 위한 헬퍼 클래스이다.
+- 미들웨어를 관리하기 위한 몇가지 내장 메서드를 제공한다.
+- `forRutes()` 메서드는 `단일 문자열`, `여러 문자열`, `RouteInfo` 객체, `컨트롤러 클래스` 및 `여러 컨트롤러 클래스`를 매개변수로 받을 수 있다.
+- 쉼표`','`로 구분되어 컨트롤러 목록을 매개변수로 전달해서 사용하면 된다.
+- 아래는 단일 컨트롤러의 예시이다.
+- 모든 미들웨어는 [fluent style](https://ko.wikipedia.org/wiki/%ED%94%8C%EB%A3%A8%EC%96%B8%ED%8A%B8_%EC%9D%B8%ED%84%B0%ED%8E%98%EC%9D%B4%EC%8A%A4)로 간단하게 메서드 체이닝 될 수 있다.
+
+
+``` ts
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { LoggerMiddleware } from 'middleware/logger.middleware';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DogsController } from './dogs/dogs.controller';
+import { DogsModule } from './dogs/dogs.module';
+
+@Module({
+  imports: [DogsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes(DogsController);
+  }
+}
+
+
+```
