@@ -36,6 +36,7 @@
   - [Excluding routes](#excluding-routes)
   - [Functional middleware](#functional-middleware)
   - [Multiple middleware](#multiple-middleware)
+  - [Global middleware](#global-middleware)
 
 # 개요
 
@@ -853,4 +854,28 @@ export class AppModule implements NestModule {
 ``` ts
 consumer
       .apply(cors(), helmet(), functionalLogger)
+```
+
+
+## Global middleware
+
+- 전역 범위에 미들웨어를 설정할 수도 있다.
+- `INestApplication` 인스턴스에서 제공하는 `use()` 메서드에 매개변수로 미들웨어를 전달하면 된다.
+- 글로벌 미들웨어에서는 DI 컨테이너에 접근할 수 없다. 즉 DI가 안된다. 대신에 함수형 미들웨어를 사용할 수 있다.
+- 또는 클래스 미들웨어를 `AppModule`내에서 `.forRoutes('*')`를 사용할 수도 있다.
+
+
+``` ts
+import { NestFactory } from '@nestjs/core';
+import { functionalLogger } from 'middleware/functionalLogger.middleware';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.use(functionalLogger);
+  await app.listen(3000);
+}
+bootstrap();
+
+
 ```
