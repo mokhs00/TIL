@@ -35,6 +35,7 @@
   - [Middleware consumer](#middleware-consumer)
   - [Excluding routes](#excluding-routes)
   - [Functional middleware](#functional-middleware)
+  - [Multiple middleware](#multiple-middleware)
 
 # 개요
 
@@ -839,4 +840,17 @@ export class AppModule implements NestModule {
       .forRoutes(DogsController);
   }
 }
+```
+
+## Multiple middleware
+
+- `consumer.apply()` 메서드의 매개변수로 미들웨어를 여러개 넘겨줄 수 있다.
+- 미들웨어는 순차적으로 실행되며 먼저 실행하고 싶은 걸 매개변수 배치 시에 우선 순위로 두면 된다.
+- 다음 코드는 미들웨어를 여러개 설정하는 코드이다.
+
+
+
+``` ts
+consumer
+      .apply(cors(), helmet(), functionalLogger)
 ```
