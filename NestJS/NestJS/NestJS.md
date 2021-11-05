@@ -796,11 +796,47 @@ export class AppModule implements NestModule {
 
 ## Functional middleware
 
+- 미들웨어에 의존성이 필요하지 않다면, 간단하게 함수형 미들웨어를 사용하자.
+- 클래스형이 아닌 Functional middleware는 다음과 같이 정의한다.
+
 ``` ts
-import { Request, Response, NextFunction } from 'express';
+// functionalLogger.middleware.ts
+import { NextFunction, Request, Response } from 'express';
 
 export function logger(req: Request, res: Response, next: NextFunction) {
-  console.log(`Request...`);
+  console.log('[functional logger]Request. . .');
   next();
-};
+}
+
+```
+
+
+- Module에 설정하는 코드는 다음과 같다
+
+
+``` ts
+// app.module.ts
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
+import { functionalLogger } from 'middleware/functionalLogger.middleware';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DogsController } from './dogs/dogs.controller';
+import { DogsModule } from './dogs/dogs.module';
+
+@Module({
+  imports: [DogsModule],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(functionalLogger)
+      .forRoutes(DogsController);
+  }
+}
 ```
