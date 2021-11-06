@@ -42,6 +42,8 @@
   - [Custom exceptions](#custom-exceptions)
   - [Built-in HTTP exceptions](#built-in-http-exceptions)
   - [Exception filters](#exception-filters-1)
+  - [Arguments host](#arguments-host)
+  - [Binging filters](#binging-filters)
 
 # 개요
 
@@ -1042,3 +1044,67 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
 - `@Catch(HttpException)` 데코레이터는 필요한 메타데이터를 예외 필터에 바인딩하여, 해당 필터가 `HttpException` type의 예외를 Catch한다는 정보를 Nest에게 전달한다.
 - 이를 이용해 한 번에 여러 타입의 예외에 대한 필터를 설정할 수도 있다.
+
+
+## Arguments host
+
+- 위에서 `catch()` 메서드에 `ArgumentsHost` type의 매개변수를 보았을 것이다. 
+- 먼저 `catch()` 메서드의 매개변수로 exeption은 현재 처리중인 예외를 의미하고, host 매개변수의 type인 `ArgumentsHost`는 강력한 유틸리티 객체인데, `Execution context`장에서 자세하게 살펴보고 정리하자.
+
+## Binging filters
+
+- `@nest/common`패키지의 `@UseFilters()`를 이용해서 controller에 필터를 설정해보자.
+- 다음은 메서드 범위에 filter를 설정하는 방법이다. 컨트롤러 범위, 전역 범위에 설정하는 것을 차례로 알아보자.
+
+``` ts
+// dogs.controller.ts
+@Get()
+@UseFilters(HttpExceptionFilter)
+async findAll(): Promise<Dog[]> {
+  throw new ApiException('error response test', HttpStatus.NOT_FOUND);
+  // return this.dogsService.findAll();
+}
+```
+
+- 컨트롤러 범위 필터 설정
+
+``` ts
+// dogs.controller.ts
+@Controller('dogs')
+@UseFilters(HttpExceptionFilter)
+export class DogsController {
+  constructor(private readonly dogsService: DogsService) { }
+  //...
+}
+```
+
+- 전역 범위 필터 설정
+
+``` ts
+// main.ts
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalFilters(new HttpExceptionFilter());
+  await app.listen(3000);
+}
+bootstrap();
+```   
+
+
+
+- 전역 범위 필터는 모듈 외부에서 등록하는 것이기 때문에 DI가 되지 않는다. 
+- 이 문제를 해결하기 위해서는 다음과 같이 설정하면, 모든 모듈에서 직접 전역범위 필터를 등록할 수 있다.
+
+``` ts
+// app.module.ts
+import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
+
+@Module({
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+  ],
+})
+export class AppModule {}
+```
