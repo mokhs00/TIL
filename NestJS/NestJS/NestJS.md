@@ -37,6 +37,7 @@
   - [Functional middleware](#functional-middleware)
   - [Multiple middleware](#multiple-middleware)
   - [Global middleware](#global-middleware)
+- [Exception filters](#exception-filters)
 
 # 개요
 
@@ -879,3 +880,25 @@ bootstrap();
 
 
 ```
+
+
+
+# Exception filters
+
+- Nest에는 `exceptions layer`가 내장되어 있어 있고 `exceptions layer`는 애플리케이션 전체에서 처리되지 않은 모든 exception을 처리한다.
+
+![./NestJS/2.png](./NestJS/2.png)
+
+
+- 기본적으로 `HttpException`을 핸들링하는 `global exception filter`에 의해 해당 작업이 수행되고, `인식되지 않은 예외`**(HttpException이 아니거나, 상속받지 않은 예외)** 발생 시에 다음과 같은 JSON response를 기본값으로 내보낸다.
+  
+``` json
+{
+  "statusCode": 500,
+  "message": "Internal server error"
+}
+```
+
+> global exception filter는 [http-errors](https://www.npmjs.com/package/http-errors) 라이브러리를 부분적으로 지원한다.
+> `http-errors`로 발생시킨 error는 `InternalServerErrorException`으로 처리하지 않고, 
+> 기본적으로 statusCode, message 속성을 포함하는 error를 위에서 봤던 Nest 기본 error response에 맞게 내보낸다.
