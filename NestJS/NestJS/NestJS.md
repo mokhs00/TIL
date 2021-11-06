@@ -39,6 +39,7 @@
   - [Global middleware](#global-middleware)
 - [Exception filters](#exception-filters)
   - [Throwing standard exceptions](#throwing-standard-exceptions)
+  - [Custom exceptions](#custom-exceptions)
 
 # 개요
 
@@ -966,5 +967,32 @@ async findAll() {
 {
   "status": 403,
   "error": "This is a custom message"
+}
+```
+
+
+## Custom exceptions
+
+- Custom Exception을 만들고 싶다면 다음과 같이 `HttpException` 클래스를 상속하는 고유한 예외 클래스를 만드는 것이 좋다.
+- 이 방식을 이용하면, Nest가 예외를 인식하고 자동으로 error 응답 처리를 해준다.
+- 다음은 `HttpException` 클래스를 상속받아 구현한 custom exception 클래스의 예시이다.
+
+
+``` ts
+// api.exception.ts
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+export class ApiException extends HttpException {
+  constructor(message: string, status: HttpStatus) {
+    super(message, status);
+  }
+}
+```
+
+``` ts
+// xxx.controller.ts
+@Get()
+async findAll() {
+  throw new ApiException('error response test', HttpStatus.NOT_FOUND);
 }
 ```
