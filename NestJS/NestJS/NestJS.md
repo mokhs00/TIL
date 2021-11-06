@@ -38,6 +38,7 @@
   - [Multiple middleware](#multiple-middleware)
   - [Global middleware](#global-middleware)
 - [Exception filters](#exception-filters)
+  - [Throwing standard exceptions](#throwing-standard-exceptions)
 
 # 개요
 
@@ -902,3 +903,68 @@ bootstrap();
 > global exception filter는 [http-errors](https://www.npmjs.com/package/http-errors) 라이브러리를 부분적으로 지원한다.
 > `http-errors`로 발생시킨 error는 `InternalServerErrorException`으로 처리하지 않고, 
 > 기본적으로 statusCode, message 속성을 포함하는 error를 위에서 봤던 Nest 기본 error response에 맞게 내보낸다.
+
+## Throwing standard exceptions
+
+- Nest는 `@nestjs/common` 패키지에서 `HttpException`을 제공한다.
+- HTTP REST/GraphQL API 기반 애플리케이션의 경우 표준 HTTP 응답 객체를 내보내는 것이 가장 좋다.
+- 다음은 Nest에서 표준 HTTP 응답 객체를 이용해 403 코드를 내보내는 코드의 예시이다.
+  
+``` ts
+@Get()
+async findAll() {
+  throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+}
+
+```
+
+- 이에 대한 json response는 다음과 같다.
+ 
+``` json
+{
+  "statusCode": 403,
+  "message": "Forbidden"
+}
+```
+
+- `HttpException` 생성자는 다음 필수 매개변수를 사용한다.
+
+| 매개변수(argument) | 설명                                      |
+| ------------------ | ----------------------------------------- |
+| `response`         | json 응답 본문을 정의 string이거나 object |
+| `status`           | HTTP 상태 코드 정의                       |
+
+
+- 그리고 json 응답 본문에는 다음 두가지 속성을 기본값으로 가진다.
+
+
+| 속성(property) | 설명                                         |
+| -------------- | -------------------------------------------- |
+| `statusCode`   | `status` 매개변수로 제공된 HTTP 상태코드     |
+| `message`      | `status`에 따른 HTTP 오류에 대한 간단한 설명 |
+
+
+- 만약, json 응답 본문의 `message`부분을 재정의 하고 싶다면, `response` 매개변수에 원하는 문자열을 전달하면 된다.
+- 전체 json response를 재정의 하고 싶다면, object를 매개변수로 전달하면 된다. Nest가 해당 객체를 직렬화핳고, json response로 반환한다.
+- **단, 두번째 생성자 매개변수인 `status`는 유효한 HTTP 상태 코드여야하며, 모범사례로는 `@nestjs/common`의 `HttpStatus`을 사용하는 것이다.**
+- 다음은 전체 json response를 재정의하는 예시이다.
+  
+``` ts
+@Get()
+async findAll() {
+  throw new HttpException({
+    status: HttpStatus.FORBIDDEN,
+    error: 'This is a custom message',
+  }, HttpStatus.FORBIDDEN);
+}
+
+```
+
+- 다음은 해당 코드에 대한 json response이다.
+
+``` json
+{
+  "status": 403,
+  "error": "This is a custom message"
+}
+```
