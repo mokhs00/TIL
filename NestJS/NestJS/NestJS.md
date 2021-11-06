@@ -44,6 +44,7 @@
   - [Exception filters](#exception-filters-1)
   - [Arguments host](#arguments-host)
   - [Binging filters](#binging-filters)
+  - [Catch everything](#catch-everything)
 
 # 개요
 
@@ -1107,4 +1108,39 @@ import { APP_FILTER } from '@nestjs/core';
   ],
 })
 export class AppModule {}
+```
+
+
+## Catch everything
+
+- 모든 예외를 Catch 하고싶다면 `@Catch()` 데코레이터의 매개변수 목록을 비워두면 된다.
+
+``` ts
+// all-exception.filter.ts
+import {
+  ArgumentsHost,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+
+export class AllExceptionsFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
+
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    response.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString,
+      path: request.url,
+    });
+  }
+}
+
 ```
