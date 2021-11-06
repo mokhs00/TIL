@@ -40,6 +40,7 @@
 - [Exception filters](#exception-filters)
   - [Throwing standard exceptions](#throwing-standard-exceptions)
   - [Custom exceptions](#custom-exceptions)
+  - [Built-in HTTP exceptions](#built-in-http-exceptions)
 
 # 개요
 
@@ -996,3 +997,30 @@ async findAll() {
   throw new ApiException('error response test', HttpStatus.NOT_FOUND);
 }
 ```
+
+
+## Built-in HTTP exceptions
+
+- 다음은 Nest가 제공하는 HTTP exceptions이다.
+- `@nestjs/common` 패키지에 정의 되어 있으며, `HttpException`을 상속받은 구현체이다.
+- `BadRequestException`
+- `UnauthorizedException`
+- `NotFoundException`
+- `ForbiddenException`
+- `NotAcceptableException`
+- `RequestTimeoutException`
+- `ConflictException`
+- `GoneException`
+- `HttpVersionNotSupportedException`
+- `PayloadTooLargeException`
+- `UnsupportedMediaTypeException`
+- `UnprocessableEntityException`
+- `InternalServerErrorException`
+- `NotImplementedException`
+- `ImATeapotException`
+- `MethodNotAllowedException`
+- `BadGatewayException`
+- `ServiceUnavailableException`
+- `GatewayTimeoutException`
+- `PreconditionFailedException`
+
