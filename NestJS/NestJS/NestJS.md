@@ -41,6 +41,7 @@
   - [Throwing standard exceptions](#throwing-standard-exceptions)
   - [Custom exceptions](#custom-exceptions)
   - [Built-in HTTP exceptions](#built-in-http-exceptions)
+  - [Exception filters](#exception-filters-1)
 
 # 개요
 
@@ -655,11 +656,10 @@ export class LoggerMiddleware implements NestMiddleware {
 Middleware 또한 DI(Dependency Injection)가 가능하다.
 Nest에서는 생성자 주입을 추천한다.
 
-
 ## Applying middleware
 
 - `@Module()` 데코레이터 옵션에는 미들웨어를 설정할 수 없다.
-- 대신에 모듈 클래스의 configure 메서드를 사용하여 설정한다. 
+- 대신에 모듈 클래스의 configure 메서드를 사용하여 설정한다.
 - 미들웨어를 포함하는 모듈은 NestModule 인터페이스를 상속받아 구현해야한다.
 - 다음 예시 코드를 확인하자.
 
@@ -686,7 +686,6 @@ export class AppModule implements NestModule {
 
 - (1) middleware 설정
 - (2) 설정한 middleware를 적용할 route 경로 설정
-
 
 또한, forRoutes() 메서드의 매개변수로 객체를 전달할 수 있는데, `path`, `method`를 다음과 같이 사용해서 특정 path와 특정 http method에 미들웨어를 적용할 수 있다.
 
@@ -716,7 +715,6 @@ export class AppModule implements NestModule {
 }
 ```
 
-
 ## Route wildcards
 
 nest는 정규표현식 패턴 기반 라우팅도 지원한다. 다음과 같이 `*`를 사용해 모든 문자 조합을 허용할 수 있다.
@@ -724,7 +722,6 @@ nest는 정규표현식 패턴 기반 라우팅도 지원한다. 다음과 같�
 `forRoutes({ path: "a*b", method: RequestMethod.ALL})`
 
 `"a*b"`는 `a_b`, `acb` 등과 일치하고, `?`, `+`, `*`, `()`문자는 정규표현식 대응 부분이며, 라우트 경로에 사용할 수 있다. 단, `-`과 `.`은 문자열 기반 경로로 문자 그대로 해석된다.
-
 
 ## Middleware consumer
 
@@ -736,7 +733,6 @@ nest는 정규표현식 패턴 기반 라우팅도 지원한다. 다음과 같�
 - 쉼표`','`로 구분되어 컨트롤러 목록을 매개변수로 전달해서 사용하면 된다.
 - 아래는 단일 컨트롤러의 예시이다.
 - 모든 미들웨어는 [fluent style](https://ko.wikipedia.org/wiki/%ED%94%8C%EB%A3%A8%EC%96%B8%ED%8A%B8_%EC%9D%B8%ED%84%B0%ED%8E%98%EC%9D%B4%EC%8A%A4)로 간단하게 메서드 체이닝 될 수 있다.
-
 
 ``` ts
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -816,9 +812,7 @@ export function logger(req: Request, res: Response, next: NextFunction) {
 
 ```
 
-
 - Module에 설정하는 코드는 다음과 같다
-
 
 ``` ts
 // app.module.ts
@@ -853,13 +847,10 @@ export class AppModule implements NestModule {
 - 미들웨어는 순차적으로 실행되며 먼저 실행하고 싶은 걸 매개변수 배치 시에 우선 순위로 두면 된다.
 - 다음 코드는 미들웨어를 여러개 설정하는 코드이다.
 
-
-
 ``` ts
 consumer
       .apply(cors(), helmet(), functionalLogger)
 ```
-
 
 ## Global middleware
 
@@ -867,7 +858,6 @@ consumer
 - `INestApplication` 인스턴스에서 제공하는 `use()` 메서드에 매개변수로 미들웨어를 전달하면 된다.
 - 글로벌 미들웨어에서는 DI 컨테이너에 접근할 수 없다. 즉 DI가 안된다. 대신에 함수형 미들웨어를 사용할 수 있다.
 - 또는 클래스 미들웨어를 `AppModule`내에서 `.forRoutes('*')`를 사용할 수도 있다.
-
 
 ``` ts
 import { NestFactory } from '@nestjs/core';
@@ -884,14 +874,11 @@ bootstrap();
 
 ```
 
-
-
 # Exception filters
 
 - Nest에는 `exceptions layer`가 내장되어 있어 있고 `exceptions layer`는 애플리케이션 전체에서 처리되지 않은 모든 exception을 처리한다.
 
 ![./NestJS/2.png](./NestJS/2.png)
-
 
 - 기본적으로 `HttpException`을 핸들링하는 `global exception filter`에 의해 해당 작업이 수행되고, `인식되지 않은 예외`**(HttpException이 아니거나, 상속받지 않은 예외)** 발생 시에 다음과 같은 JSON response를 기본값으로 내보낸다.
   
@@ -903,7 +890,7 @@ bootstrap();
 ```
 
 > global exception filter는 [http-errors](https://www.npmjs.com/package/http-errors) 라이브러리를 부분적으로 지원한다.
-> `http-errors`로 발생시킨 error는 `InternalServerErrorException`으로 처리하지 않고, 
+> `http-errors`로 발생시킨 error는 `InternalServerErrorException`으로 처리하지 않고,
 > 기본적으로 statusCode, message 속성을 포함하는 error를 위에서 봤던 Nest 기본 error response에 맞게 내보낸다.
 
 ## Throwing standard exceptions
@@ -921,7 +908,7 @@ async findAll() {
 ```
 
 - 이에 대한 json response는 다음과 같다.
- 
+
 ``` json
 {
   "statusCode": 403,
@@ -936,15 +923,12 @@ async findAll() {
 | `response`         | json 응답 본문을 정의 string이거나 object |
 | `status`           | HTTP 상태 코드 정의                       |
 
-
 - 그리고 json 응답 본문에는 다음 두가지 속성을 기본값으로 가진다.
-
 
 | 속성(property) | 설명                                         |
 | -------------- | -------------------------------------------- |
 | `statusCode`   | `status` 매개변수로 제공된 HTTP 상태코드     |
 | `message`      | `status`에 따른 HTTP 오류에 대한 간단한 설명 |
-
 
 - 만약, json 응답 본문의 `message`부분을 재정의 하고 싶다면, `response` 매개변수에 원하는 문자열을 전달하면 된다.
 - 전체 json response를 재정의 하고 싶다면, object를 매개변수로 전달하면 된다. Nest가 해당 객체를 직렬화핳고, json response로 반환한다.
@@ -971,13 +955,11 @@ async findAll() {
 }
 ```
 
-
 ## Custom exceptions
 
 - Custom Exception을 만들고 싶다면 다음과 같이 `HttpException` 클래스를 상속하는 고유한 예외 클래스를 만드는 것이 좋다.
 - 이 방식을 이용하면, Nest가 예외를 인식하고 자동으로 error 응답 처리를 해준다.
 - 다음은 `HttpException` 클래스를 상속받아 구현한 custom exception 클래스의 예시이다.
-
 
 ``` ts
 // api.exception.ts
@@ -997,7 +979,6 @@ async findAll() {
   throw new ApiException('error response test', HttpStatus.NOT_FOUND);
 }
 ```
-
 
 ## Built-in HTTP exceptions
 
@@ -1024,3 +1005,40 @@ async findAll() {
 - `GatewayTimeoutException`
 - `PreconditionFailedException`
 
+## Exception filters
+
+- 기본 예외 필터가 자동으로 처리해주는 것들이 많지만, exceptions layer에 대해서 full control하기를 원할 수 있다.
+- 예를 들어, `로깅을 추가`하거나 일부 동적 요인을 기반으로 각 상황에 맞는 json 스키마를 사용할 수 있다.
+- exception filter는 정확히 위 목적을 위해서 설계되었고, 이는 개발자가 제어의 정확한 흐름과 사용자에게 내보낼 response를 제어할 수 있게 해준다.
+
+- 모든 exception filter는 일반 `ExceptionFilter<T>` 인터페이스를 구현해야하며, `catch(exception: T, host: ArgumentsHost)` 메서드를 정의해야한다.
+- 다음은 `HttpException`을 Catch 하여 응답 로직을 express 모듈의 Request와 Response를 이용해서 커스텀하는 예시 코드이다.
+
+``` ts
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
+
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getRequest<Response>();
+    const request = ctx.getRequest<Request>();
+    const status = exception.getStatus();
+
+    response.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString,
+      path: request.url,
+    });
+  }
+}
+```
+
+- `@Catch(HttpException)` 데코레이터는 필요한 메타데이터를 예외 필터에 바인딩하여, 해당 필터가 `HttpException` type의 예외를 Catch한다는 정보를 Nest에게 전달한다.
+- 이를 이용해 한 번에 여러 타입의 예외에 대한 필터를 설정할 수도 있다.
