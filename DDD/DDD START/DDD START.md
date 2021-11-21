@@ -25,6 +25,7 @@
   - [@AttributeOverrides(@AttributeOverride())](#attributeoverridesattributeoverride)
   - [hibernate 기본 생성자를 protected로 선언해야 하는 이유](#hibernate-기본-생성자를-protected로-선언해야-하는-이유)
   - [JPA @Access와 엔티티 기능 중심 구현](#jpa-access와-엔티티-기능-중심-구현)
+  - [AttributeConverter를 이용한 밸류 매핑 처리](#attributeconverter를-이용한-밸류-매핑-처리)
 
 # CH 1 도메인 모델 시작
 
@@ -221,3 +222,50 @@ public class Order {
 
 JPA의 구현체인 hibernate는 `@Access`를 이용해 명시적으로 접근 방식을 지정하지 않으면 `@Id`나 `@EmbeddedId`가 어디에 위치했느냐에 따라 접근 방식을 결정한다.
 `@Id`나 `@EmbeddedId`가 필드에 위치하면 필드 접근 방식을 선택하고, get메서드에 위치하면 메서드 접근 방식을 선택한다.
+
+## AttributeConverter를 이용한 밸류 매핑 처리
+
+JPA의 AttributeConverter를 이용해서 밸류 필드를 원하는 값으로 저장할 수 있다.
+
+
+
+``` java
+public interface AttributeConverter<X, Y> {
+  public Y convertToDatabaseColumn (X attribute);
+  public X convertToEntityAttribute (Y dbData);
+}
+
+
+@Convertor(autoApply = true)
+public class MoneyConvertor implements AttributeConverter<Money, Integer> {
+
+  @Override
+  public Integer convertToDatabaseColumn(Money money) {
+    if (money == null)
+      return null;
+    else
+      return money.getValue();
+  }
+
+  @Override
+  public Money convertToEntityAttribute (Integer value) {
+    if (value == null) return null;
+    else return new Money(value);
+  }
+}
+```
+
+`@Convertor(autoApply = true)`를 사용하면 JPA에서 자동으로 해당 타입을 convert해준다.
+autoApply 속성이 false인 경우 다음과 같이 사용할 컨버터를 직접 지정할 수도 있다.
+
+
+``` java
+
+public class Order {
+  @Column(name = "total_amounts")
+  @Convert(converter = MoneyConverter.class)
+  private Money totalAmounts;
+}
+
+```
+
