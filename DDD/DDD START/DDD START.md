@@ -24,6 +24,7 @@
 - [CH 4 리포지터리와 모델 구현(JPA중심)](#ch-4-리포지터리와-모델-구현jpa중심)
   - [@AttributeOverrides(@AttributeOverride())](#attributeoverridesattributeoverride)
   - [hibernate 기본 생성자를 protected로 선언해야 하는 이유](#hibernate-기본-생성자를-protected로-선언해야-하는-이유)
+  - [JPA @Access와 엔티티 기능 중심 구현](#jpa-access와-엔티티-기능-중심-구현)
 
 # CH 1 도메인 모델 시작
 
@@ -194,3 +195,29 @@ public class MemberId {
 
 - 하이버네이트는 클래스를 상속한 `프록시 객체`를 이용해서 지연 로딩을 구현한다. 
 - 이 경우 `프록시 클래스`에서 `상위 클래스의 기본 생성자`를 호출할 수 있어야 하므로 `지연 로딩 대상`이 되는 `@Entity`와 `@Embeddable`의 기본 생성자는 private이 아닌 `protected`로 지정해야 한다.
+
+
+## JPA @Access와 엔티티 기능 중심 구현
+
+``` java
+@Entity
+@Access(AccessType.FIELD)
+public class Order {
+
+  @EmbeddedId
+  private OrderNo number;
+
+  @Column(name = "state")
+  @Enumerated(EnumType.STRING)
+  private OrderState state;
+
+  // ...
+}
+
+```
+
+
+엔티티를 객체가 제공할 기능 중심으로 구현하도록 유도하려면, JPA 매핑 처리를 프로퍼티 방식이 아닌 필드 방식으로 선택해서 불필요한 get/set 메서드를 구현하지 말아야한다.
+
+JPA의 구현체인 hibernate는 `@Access`를 이용해 명시적으로 접근 방식을 지정하지 않으면 `@Id`나 `@EmbeddedId`가 어디에 위치했느냐에 따라 접근 방식을 결정한다.
+`@Id`나 `@EmbeddedId`가 필드에 위치하면 필드 접근 방식을 선택하고, get메서드에 위치하면 메서드 접근 방식을 선택한다.
