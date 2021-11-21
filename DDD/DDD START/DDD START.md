@@ -23,6 +23,7 @@
   - [ID를 이용한 참조와 조회 성능](#id를-이용한-참조와-조회-성능)
 - [CH 4 리포지터리와 모델 구현(JPA중심)](#ch-4-리포지터리와-모델-구현jpa중심)
   - [@AttributeOverrides(@AttributeOverride())](#attributeoverridesattributeoverride)
+  - [hibernate 기본 생성자를 protected로 선언해야 하는 이유](#hibernate-기본-생성자를-protected로-선언해야-하는-이유)
 
 # CH 1 도메인 모델 시작
 
@@ -187,3 +188,9 @@ public class MemberId {
 }
 
 ```
+
+
+## hibernate 기본 생성자를 protected로 선언해야 하는 이유
+
+- 하이버네이트는 클래스를 상속한 `프록시 객체`를 이용해서 지연 로딩을 구현한다. 
+- 이 경우 `프록시 클래스`에서 `상위 클래스의 기본 생성자`를 호출할 수 있어야 하므로 `지연 로딩 대상`이 되는 `@Entity`와 `@Embeddable`의 기본 생성자는 private이 아닌 `protected`로 지정해야 한다.
