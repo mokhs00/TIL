@@ -14,7 +14,12 @@
   - [pointer](#pointer)
   - [배열(slice, array)](#배열slice-array)
   - [map](#map)
-  - [structs](#structs)
+  - [구조체(struct)](#구조체struct)
+  - [receiver와 method](#receiver와-method)
+  - [struct String](#struct-string)
+  - [타입(type)](#타입type)
+  - [고루틴(goroutine)](#고루틴goroutine)
+  - [channels](#channels)
 
 ## 개요
 
@@ -294,7 +299,7 @@ func main() {
 
 ```
 
-## structs
+## 구조체(struct)
 
 - go에서는 c의 구조체와 유사한 형태를 지원한다
 - 구조체를 선언함으로써 새로운 자료형을 선언할 수 있고, type-safe에도 효과가 있다
@@ -313,4 +318,165 @@ func main() {
   fmt.Println(user)
 }
 
+```
+
+## receiver와 method
+
+- go에서는 receiver를 이용해 메서드 기능을 이용할 수 있다
+- `func (t T) Foo() {}`형식이며 기존 함수에서 앞에 `(t *T)`가 추가된 것이다 (T는 타입이다)
+- T에 대한 receiver가 존재하는 함수는 T를 이용해 해당 함수를 사용할 수 있다 ex) `T.Foo()`
+- 경우에 따라 참조값을 사용해야 하므로 포인터를 이해하고 사용하는 것에 주의하자
+- 추가로 함수나 구조체에 대한 주석은 해당 주체와 동일한 이름으로 시작해야한다
+- 주석을 통해 사용하는 사람들에게 힌트를 줄 수도 있다
+- 다음 예시를 통해 알아보자
+
+
+``` go
+// Account struct
+type Account struct {
+  owner   string
+  balance int
+}
+
+// NewAccount create Account
+func NewAccount(owner string) *Account {
+  account := Account{owner: owner, balance: 0}
+  return &account
+}
+
+// Deposit x amount on the account
+func (account *Account) Deposit(amount int) {
+  account.balance += amount
+}
+
+func main() {
+  a := account.NewAccount("mokhs")
+
+  a.Deposit(100)
+}
+```
+
+## struct String
+
+- 구조체를 출력해보면 나오는 문자를 변경할 수도 있다
+- 출력 시에 기본적으로 String 메서드를 실행하게 되는데, String 메서드를 receiver를 이용해 재정의하면 이를 변경할 수 있다
+- 다음 예시를 통해 알아보자
+
+``` go
+func (account Account) String() string {
+  return fmt.Sprint(account.owner, " has: ", account.balance)
+}
+
+func main() {
+
+  a := account.NewAccount("mokhs")
+  a.Deposit(100)
+
+  // mokhs has:100
+  fmt.Println(a)
+}
+
+
+```
+
+## 타입(type)
+
+- 구조체가 아닌 타입을 정의할 수 있다
+- 이는 type-safe한 프로그램을 위해서 유용하고, 네이밍을 통해 가독성을 증가시킬 수 있다
+- 또한 타입도 구조체와 동일하게 메서드를 추가할 수 있다
+- 아래 예시를 통해 알아보자
+
+``` go
+// dict.go
+// Dictionary type
+type Dictionary map[string]string
+
+var errNotFoundElement = errors.New("not found element")
+
+func (dictionary Dictionary) Search(word string) (string, error) {
+  value, exists := dictionary[word]
+
+  if exists {
+    return value, nil
+  }
+
+  return "", errNotFoundElement
+}
+
+// main.go
+func main() {
+  dict := dict.Dictionary{}
+  dict["a"] = "b"
+
+  dict.Search("a")
+
+  fmt.Println(dict)
+}
+```
+
+## 고루틴(goroutine)
+
+- 고루틴은 Go런타임에서 비동기 처리를 이용한 동시성을 지원하는 경량 가상 쓰레드이다.
+- 가상 쓰레드라는 것은 실제로 OS레벨에서 쓰레드가 생성되는 것이 아니라 애플리케이션(Go)레벨에서 가상의 쓰레드가 생성되는 것을 의미하니 주의하자
+- 런타임에서만 동작하기 때문에 main 런타임이 종료되면 모든 고루틴이 종료되니 주의하자
+- `go` 키워드를 이용해 고루틴을 선언한다
+- 다음 예시를 통해서 고루틴의 사용법을 알아보자
+
+``` go
+import (
+  "fmt"
+  "time"
+)
+
+func main() {
+  // go 키워드를 이용해 고루틴 생성 -> 동시에 실행됨. 전체 출력을 보면서 이해해보자
+  go bar("foo")
+  bar("bar")
+
+  /* 전체 출력
+  bar 0
+  foo 0
+  foo 1
+  bar 1
+  bar 2
+  foo 2  
+  */
+}
+
+func bar(name string) {
+  for i := 0; i < 10; i++ {
+    fmt.Println(name, i)
+    time.Sleep(time.Second)
+  }
+}
+```
+
+## channels
+
+- 고루틴 간에 channel을 이용해 데이터를 주고 받을 수 있다
+- `chan` 타입을 이용하며 보통 고루틴으로 사용할 함수에 매개변수로 채널을 전달하는 식으로 사용한다
+- 채널에 데이터를 전달할 때는 `channel <- true`와 같은 형식으로 작성한다
+- channel에 전송된 데이터는 `<-channel`을 이용해 받을 수 있다
+- 다음 예시를 통해 알아보자
+- *중요 : main 런타임이 종료 시에 고루틴이 모두 종료되므로 이 점을 항상 주의하자
+
+``` go
+func foo(person string, channel chan bool) {
+  time.Sleep(time.Second * 3)
+  fmt.Println(person)
+  channel <- true
+}
+
+func main() {
+  channel := make(chan bool)
+
+  people := [2]string{"a", "b"}
+  for _, person := range people {
+    go foo(person, channel)
+  }
+
+  for range people {
+    fmt.Println(<-channel)
+  }
+}
 ```
