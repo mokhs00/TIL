@@ -13,10 +13,9 @@
     - [proxy (Node)](#proxy-node)
   - [Objects](#objects)
     - [Pod](#pod)
+    - [Pod 종류](#pod-종류)
     - [ReplicaSet](#replicaset)
     - [Deployment](#deployment)
-    - [Pod-](#pod-)
-    - [POD 종류](#pod-종류)
   - [Service](#service)
     - [ClusterIP](#clusterip)
     - [NodePort](#nodeport)
@@ -91,6 +90,14 @@
 - 전체 클러스터에서 고유한 IP가 할당됨
 - 여러 개의 컨테이너가 하나의 Pod에 속할 수 있음
 
+### Pod 종류
+
+- `DAEMON SET` : 모든 노드에 하나만 띄우고 싶은 Pod
+- `REPLICASET` : 여러개의 Pod를 관리
+- `DEPLOYMENT` : REPLICASET의 상위 개념
+- `STATEFUL SETS` : 순서대로 Pod 생성 or 같은 볼륨 재활용
+- `JOB` : 한 번 실행 후 종료
+
 ### ReplicaSet
 
 - 여러개의 Pod를 관리
@@ -102,15 +109,6 @@
 - ReplicaSet의 배포 버전 관리
 - ReplicaSet의 설정을(replicas 수 등) 이용해 버전 관리 -> k8s가 컨테이너를 auto recovery하는 특징을 이용
 
-### Pod-
-
-### POD 종류
-
-- `DAEMON SET` : 모든 노드에 하나만 띄우고 싶은 POD
-- `REPLICASET` : 여러개의 POD를 관리
-- `DEPLOYMENT` : REPLICASET의 상위 개념
-- `STATEFUL SETS` : 순서대로 POD 생성 or 같은 볼륨 재활용
-- `JOB` : 한 번 실행 후 종료
 
 ## Service
 
@@ -118,7 +116,7 @@
 
 - 클러스터 내부에서 이용하는 프록시
 - 로드밸런싱
-- POD 재생성 시 IP가 변경되기 때문에 IP를 고정하기 위해서 프록시 용도로 사용함
+- Pod 재생성 시 IP가 변경되기 때문에 IP를 고정하기 위해서 프록시 용도로 사용함
 - 클러스터 내부에서 서비스 연결은 DNS를 이용
 
 ### NodePort
