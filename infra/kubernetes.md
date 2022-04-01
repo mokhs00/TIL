@@ -25,6 +25,7 @@
   - [API](#api)
     - [Object Spec - YAML](#object-spec---yaml)
     - [API 호출하기란?](#api-호출하기란)
+  - [kubectl](#kubectl)
   - [ref](#ref)
 
 ## Architecture
@@ -108,7 +109,6 @@
 
 - ReplicaSet의 배포 버전 관리
 - ReplicaSet의 설정을(replicas 수 등) 이용해 버전 관리 -> k8s가 컨테이너를 auto recovery하는 특징을 이용
-
 
 ## Service
 
@@ -215,6 +215,20 @@ spec:
 - 원하는 상태(Desired State)를 다양한 오브젝트(Object)로 정의(Spec)하고 API서버에 yaml 형식을 전달
 - 이후는 쿠버네티스가 해당 yaml 파일을 기반으로 동작한다
 
+## kubectl
+
+- [kubectl commands](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-strong-getting-started-strong-)
+
+| command  | description                                                                                                                                                                                   | example                                                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| apply    | 원하는 상태 적용 -f 옵션(=파일기반 적용)                                                                                                                                                      | `kubectl apply -f mokhs-k8s.yml`                                                                   |
+| get      | 리소스 리스트 출력                                                                                                                                                                            | `kubectl get` `kubectl get pod -o json`(json으로 출력) `kubectl get pod --show-labels`(labels조회) |
+| describe | 리소스의 상태 상세정보 출력                                                                                                                                                                   | `kubectl describe pod/wordpress-12f21331r1xsds`                                                    |
+| delete   | 리소스 제거                                                                                                                                                                                   | `kubectl delete pod/wordpress-12f21331r1xsds`                                                      |
+| logs     | 컨테이너 로그 보기                                                                                                                                                                            | `kubectl logs -f pod/wordpress-12f21331r1xsds` (-f 실시간 로그)                                    |
+| exec     | 컨터이너에 명령어 전달 `kubectl exec [-it] [POD_NAME] -- [COMMAND]`(컨테이너 상태를 직접 쉘로 접속하고 싶은 경우 `-it` option 사용, 여러 개의 컨테이너를 지정하고 싶은 경우 `-c` option 사용) | `kubectl exec -it wordpress-32rqfweadaf23 -- bash` (bash 접속)                                     |
+| config   | kubectl 설정 관리                                                                                                                                                                             | `kubectl config current-context`                                                                   |
+
 ## ref
 
-- https://subicura.com/k8s/guide/
+- <https://subicura.com/k8s/guide/>
