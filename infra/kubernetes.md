@@ -26,6 +26,11 @@
     - [Object Spec - YAML](#object-spec---yaml)
     - [API 호출하기란?](#api-호출하기란)
   - [kubectl](#kubectl)
+  - [How to write config yaml](#how-to-write-config-yaml)
+    - [Pod config : livenessProbe](#pod-config--livenessprobe)
+    - [Pod config : readinessProbe](#pod-config--readinessprobe)
+    - [Pod config : livenessProbe + readinessProbe](#pod-config--livenessprobe--readinessprobe)
+    - [Pod config : multi containers](#pod-config--multi-containers)
   - [ref](#ref)
 
 ## Architecture
@@ -228,6 +233,117 @@ spec:
 | logs     | 컨테이너 로그 보기                                                                                                                                                                            | `kubectl logs -f pod/wordpress-12f21331r1xsds` (-f 실시간 로그)                                    |
 | exec     | 컨터이너에 명령어 전달 `kubectl exec [-it] [POD_NAME] -- [COMMAND]`(컨테이너 상태를 직접 쉘로 접속하고 싶은 경우 `-it` option 사용, 여러 개의 컨테이너를 지정하고 싶은 경우 `-c` option 사용) | `kubectl exec -it wordpress-32rqfweadaf23 -- bash` (bash 접속)                                     |
 | config   | kubectl 설정 관리                                                                                                                                                                             | `kubectl config current-context`                                                                   |
+
+## How to write config yaml
+
+- k8s에서 리소스를 관리할 떄는 name과 label을 이용
+- keyword
+  - `version` : 오브젝트 버전 ex) v1, app/v1, networking.k8s.io/v1, ...
+  - `kind` : 종류 ex) Pod, ReplicaSet, Deployment, Service, ...
+  - `metadata` : 메타데이터 ex) name, label, annotation, ...
+  - `spec` : 상세 명세 (리소스마다 다르므로 해당 리소스에 맞게 기술)
+
+### Pod config : livenessProbe
+
+- 컨테이너가 정상적을 동작하는지 체크하고 정상적으로 동작하지 않는다면 컨테이너 재시작
+
+``` yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: echo
+  labels:
+    app: echo
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/subicura/echo:v1
+      livenessProbe: 
+        httpGet:
+          path: /not/exist
+          port: 8080
+        initialDelaySeconds: 5
+        timeoutSeconds: 2
+        periodSeconds: 5
+        failureThreshold: 1
+```
+
+### Pod config : readinessProbe
+
+- 컨테이너가 준비되었는지 체크하고 정상적으로 준비되지 않았다면 Pod으로 들어오는 요청을 제외
+- `livenessProbe`와 달리 Pod를 재시작하지 않고 요청만 제외함
+
+``` yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: echo
+  labels:
+    app: echo
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/subicura/echo:v1
+      # livenessProbe: 
+      readinessProbe:
+        httpGet:
+          path: /not/exist
+          port: 8080
+        initialDelaySeconds: 5
+        timeoutSeconds: 2
+        periodSeconds: 5
+        failureThreshold: 1
+```
+
+### Pod config : livenessProbe + readinessProbe
+
+- 보통 `livenessProbe`와 `readinessProbe`를 같이 적용하고, 애플리케이션 환경에 따라 적절하게 조절함
+
+``` yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: echo
+  labels:
+    app: echo
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/subicura/echo:v1
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 3000
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 3000
+```
+
+### Pod config : multi containers
+
+- `1 Pod = 1 Container`가 대부분이지만, 단일 Pod에서 여러 개의 컨테이너를 가질 수도 있다
+- 또한 한 Pod에 속한 컨테이너는 서로 localhost로 네트워크, 리소스를 공유할 수 있다(env 등)
+- 다음 yml로 `kubectl apply` 하게 된다면 counter Pod 안에서 `app`, `redis` container가 생성되고, 서로 env를 localhost를 통해 통신이 가능하며, env를 공유한다
+
+``` yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: counter
+  labels:
+    app: counter
+spec:
+  containers:
+    - name: app
+      image: ghcr.io/subicura/counter:latest
+      env:
+        - name: REDIS_HOST
+          value: "localhost"
+    - name: db
+      image: redis
+```
+
 
 ## ref
 
