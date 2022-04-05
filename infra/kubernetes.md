@@ -344,7 +344,6 @@ spec:
       image: redis
 ```
 
-
 ## ref
 
 - <https://subicura.com/k8s/guide/>
