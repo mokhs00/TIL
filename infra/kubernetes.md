@@ -354,9 +354,9 @@ spec:
 - ReplicaSet Controller는 `spec.selector` 옵션을 기준으로 API Server에 Pod를 수를 조회하는 요청을 주기적으로 보내 이를 검사하고, `spec.replicas` 수 만큼 Pod를 생성하거나 제거해서 유지함
 - 이후 `Scheduler`는 API Server를 감시하며, 할당되지 않은 Pod가 있는지 체크하고, 이를 적절한 노드에 배치함
 - 즉. ReplicaSet은 `ReplicaSet Controller`가 관리하고, Pod의 할당과 관련된 건 `Scheduler`가 관리한다
-- 보통 ReplicaSet을 단독으로 사용하는 경우는 없고, ReplicaSet과 함께 주로 Deployment를 사용한다
+- 보통 ReplicaSet을 단독으로 사용하는 경우는 없고, 주로 Deployment를 사용한다 그리고 Deployment를 설정하여 내부적으로 ReplicaSet을 사용한다
 - 다음은 config 예시이다
- 
+
 ``` yml
 apiVersion: apps/v1
 kind: ReplicaSet
