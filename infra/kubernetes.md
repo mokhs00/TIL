@@ -31,6 +31,7 @@
     - [Pod config : readinessProbe](#pod-config--readinessprobe)
     - [Pod config : livenessProbe + readinessProbe](#pod-config--livenessprobe--readinessprobe)
     - [Pod config : multi containers](#pod-config--multi-containers)
+    - [ReplicaSet config](#replicaset-config)
   - [ref](#ref)
 
 ## Architecture
@@ -342,6 +343,41 @@ spec:
           value: "localhost"
     - name: db
       image: redis
+```
+
+### ReplicaSet config
+
+- ReplicaSet = 복제셋
+- Pod를 단독으로 만들면 Pod에 문제 발생 시 자동으로 복구되지 않음
+- ReplicaSet은 Pod를 정해진 수만큼 복제하고 관리함
+- `spec.template`은 생성할 Pod에 대한 명세이다
+- ReplicaSet Controller는 `spec.selector` 옵션을 기준으로 API Server에 Pod를 수를 조회하는 요청을 주기적으로 보내 이를 검사하고, `spec.replicas` 수 만큼 Pod를 생성하거나 제거해서 유지함
+- 이후 `Scheduler`는 API Server를 감시하며, 할당되지 않은 Pod가 있는지 체크하고, 이를 적절한 노드에 배치함
+- 즉. ReplicaSet은 `ReplicaSet Controller`가 관리하고, Pod의 할당과 관련된 건 `Scheduler`가 관리한다
+- 보통 ReplicaSet을 단독으로 사용하는 경우는 없고, ReplicaSet과 함께 주로 Deployment를 사용한다
+- 다음은 config 예시이다
+ 
+``` yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: echo-rs
+spec:
+  replicas: 1     # replicas 1개를 기준으로 Pod를 유지
+  selector:       # Pod의 식별자
+    matchLabels: 
+      app: echo 
+      tier: app
+  template:       # Pod 명세
+    metadata:
+      labels:
+        app: echo
+        tier: app
+    spec:
+      containers:
+        - name: echo
+          image: ghcr.io/subicura/echo:v1
+
 ```
 
 ## ref
