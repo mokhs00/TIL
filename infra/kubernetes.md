@@ -32,6 +32,8 @@
     - [Pod config : livenessProbe + readinessProbe](#pod-config--livenessprobe--readinessprobe)
     - [Pod config : multi containers](#pod-config--multi-containers)
     - [ReplicaSet config](#replicaset-config)
+    - [Deployment config](#deployment-config)
+    - [Deployment config : rolling update](#deployment-config--rolling-update)
   - [ref](#ref)
 
 ## Architecture
@@ -378,6 +380,131 @@ spec:
         - name: echo
           image: ghcr.io/subicura/echo:v1
 
+```
+
+### Deployment config
+
+- k8s에서 가장 널리 사용되는 Object, Pod를 업데이트하고 이력을 관리하여 rollback 혹은 특정 버전(revision)으로 돌아갈 수 있음
+- 기존 Pod를 하나씩 종료하고 하나씩 다시 생성한다 -> 이는 사람 눈에는 update 하는 걸로 보인다
+- config는 type을 제외하고 ReplicaSet과 동일하다
+- 다음과 같이 `kubectl describe deployment-NAME`을 통해 deploymenet-controller에 의해서 각 Replica가 가 scaled up, down 되는 걸 볼 수 있다
+
+```
+❯ kubectl describe deploy/echo-deploy
+Name:                   echo-deploy
+Namespace:              default
+CreationTimestamp:      Wed, 06 Apr 2022 22:03:25 +0900
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 2
+Selector:               app=echo,tier=app
+Replicas:               4 desired | 4 updated | 4 total | 4 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=echo
+           tier=app
+  Containers:
+   echo:
+    Image:        ghcr.io/subicura/echo:v2
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   echo-deploy-77cd7699f4 (4/4 replicas created)
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  2m14s  deployment-controller  Scaled up replica set echo-deploy-76dcd9f4f9 to 4
+  Normal  ScalingReplicaSet  91s    deployment-controller  Scaled up replica set echo-deploy-77cd7699f4 to 1
+  Normal  ScalingReplicaSet  91s    deployment-controller  Scaled down replica set echo-deploy-76dcd9f4f9 to 3
+  Normal  ScalingReplicaSet  91s    deployment-controller  Scaled up replica set echo-deploy-77cd7699f4 to 2
+  Normal  ScalingReplicaSet  84s    deployment-controller  Scaled down replica set echo-deploy-76dcd9f4f9 to 2
+  Normal  ScalingReplicaSet  84s    deployment-controller  Scaled up replica set echo-deploy-77cd7699f4 to 3
+  Normal  ScalingReplicaSet  83s    deployment-controller  Scaled down replica set echo-deploy-76dcd9f4f9 to 1
+  Normal  ScalingReplicaSet  83s    deployment-controller  Scaled up replica set echo-deploy-77cd7699f4 to 4
+  Normal  ScalingReplicaSet  83s    deployment-controller  Scaled down replica set echo-deploy-76dcd9f4f9 to 0
+```
+
+- 다음은 버전관리를 위한 명령어들이다
+
+``` bash
+# history 확인
+kubectl rollout history deployment-NAME
+# revision 1 히스토리 상세 확인
+kubectl rollout history deployment-NAME --revision=1
+# 바로 이전으로 rollback
+kubectl rollout undo deployment-NAME
+# 특정 버전으로 rollback
+kubectl rollout undo deployment-NAME --to-revision=2
+```
+
+- config는 다음과 같다
+
+``` yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-deploy
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: echo
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: echo
+        tier: app
+    spec:
+      containers:
+        - name: echo
+          image: ghcr.io/subicura/echo:v2
+```
+
+### Deployment config : rolling update
+
+- Deployment에는 다양한 배포전략이 있는데, RollingUpdate에 대해서 알아보자
+- RollingUpdate config는 다음과 같다
+
+``` yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-deploy-st
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: echo
+      tier: app
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate # RollingUpdate options
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 3
+  template:
+    metadata:
+      labels:
+        app: echo
+        tier: app
+    spec:
+      containers:
+        - name: echo
+          image: ghcr.io/subicura/echo:v1
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
 ```
 
 ## ref
