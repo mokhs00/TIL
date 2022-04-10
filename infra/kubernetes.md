@@ -34,6 +34,7 @@
     - [ReplicaSet config](#replicaset-config)
     - [Deployment config](#deployment-config)
     - [Deployment config : rolling update](#deployment-config--rolling-update)
+    - [Service config](#service-config)
   - [ref](#ref)
 
 ## Architecture
@@ -159,7 +160,7 @@
 - `apiVersion` : apps/v1, batch/v1, networking.k8s.io/v1....
 - `kind` : Pod, Deployment, Service, Ingress...
 - `spec` : 각종 설정
-- `status(read-only)` : 시스템에서 관리한느 최신 상태
+- `status(read-only)` : 시스템에서 관리하는 최신 상태
 
 - one Pod
 
@@ -506,6 +507,13 @@ spec:
               path: /
               port: 3000
 ```
+
+### Service config
+
+- Service를 이용해 Pod를 노출하고 클러스터 외부에서 접근할 수 있음
+- Pod는 자체 IP를 가지고 다른 Pod와 통신할 수 있지만, 사라지고 생성되는 과정이 빈번하기 때문에 권장하지 않음
+- k8s는 Pod와 직접 통신하는 방법 대신, 별도의 고정된 IP를 가진 서비스를 만들고 그 서비스를 통해 Pod에 접근하는 방식을 사용함
+- 노출범위에 따라 ClusterIP, NodePort, LoadBalancer 등으로 타입이 나눠짐
 
 ## ref
 
