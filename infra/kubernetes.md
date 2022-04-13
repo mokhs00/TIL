@@ -36,6 +36,7 @@
     - [Deployment config : rolling update](#deployment-config--rolling-update)
     - [Service config](#service-config)
     - [Service(ClusterIP) config](#serviceclusterip-config)
+    - [Service()](#service-1)
   - [ref](#ref)
 
 ## Architecture
@@ -520,8 +521,9 @@ spec:
 
 - `ClusterIP`는 클러스터 내부에 새로운 IP를 할당하고 여러 개의 Pod를 바라보는 `로드밸런서` 기능을 제공함
 - 그리고 서비스 이름을 내부 도메인 서버에 등록하여 Pod 간에 서비스 이름으로 통신할 수 있음
+- 다음은 redis를 Service로 노출하는 예시
 
-``` yml
+``` yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -558,6 +560,46 @@ spec:
     app: counter
     tier: db
 ```
+
+- 아래 명세된 Deployment를 띄워서 내부 도메인 서버에 등록되어 있는 정보를 바탕으로 redis에 접근할 수 있음
+- counter app에 접속해 redis에 telnet하는 명령어는 다음과 같음
+
+``` sh
+kubectl get po # counter app name 확인
+kubectl exec -it counter-<app-id> -- sh # counter app에 접근하여 sh 실행
+telnet redis 6379
+keys * # key 조회
+
+```
+
+``` yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: counter
+spec:
+  selector:
+    matchLabels:
+      app: counter
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: counter
+        tier: app
+    spec:
+      containers:
+        - name: counter
+          image: ghcr.io/subicura/counter:latest
+          env:
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+
+```
+
+### Service()
 
 ## ref
 
