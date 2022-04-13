@@ -35,6 +35,7 @@
     - [Deployment config](#deployment-config)
     - [Deployment config : rolling update](#deployment-config--rolling-update)
     - [Service config](#service-config)
+    - [Service(ClusterIP) config](#serviceclusterip-config)
   - [ref](#ref)
 
 ## Architecture
@@ -514,6 +515,49 @@ spec:
 - Pod는 자체 IP를 가지고 다른 Pod와 통신할 수 있지만, 사라지고 생성되는 과정이 빈번하기 때문에 권장하지 않음
 - k8s는 Pod와 직접 통신하는 방법 대신, 별도의 고정된 IP를 가진 서비스를 만들고 그 서비스를 통해 Pod에 접근하는 방식을 사용함
 - 노출범위에 따라 ClusterIP, NodePort, LoadBalancer 등으로 타입이 나눠짐
+
+### Service(ClusterIP) config
+
+- `ClusterIP`는 클러스터 내부에 새로운 IP를 할당하고 여러 개의 Pod를 바라보는 `로드밸런서` 기능을 제공함
+- 그리고 서비스 이름을 내부 도메인 서버에 등록하여 Pod 간에 서비스 이름으로 통신할 수 있음
+
+``` yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: counter
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: counter
+        tier: db
+    spec:
+      containers:
+        - name: redis
+          image: redis
+          ports:
+            - containerPort: 6379
+              protocol: TCP
+
+# ---는 하나의 yaml 파일에 여러 리소스를 정의할 때 사용하는 구분자
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  ports:
+    - port: 6379
+      protocol: TCP
+  selector:
+    app: counter
+    tier: db
+```
 
 ## ref
 
