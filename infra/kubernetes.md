@@ -36,7 +36,7 @@
     - [Deployment config : rolling update](#deployment-config--rolling-update)
     - [Service config](#service-config)
     - [Service(ClusterIP) config](#serviceclusterip-config)
-    - [Service()](#service-1)
+    - [Service(NodePort) config](#servicenodeport-config)
   - [ref](#ref)
 
 ## Architecture
@@ -599,7 +599,26 @@ spec:
 
 ```
 
-### Service()
+### Service(NodePort) config
+
+- `ClusterIP`는 클러스터 내부에서만 접근할 수 있으므로 `NodePort`를 만들어 클러스터 외부에서 접근할 수 있도록 해야함
+- 다음은 NodePort config (3000 port를 30001로 노출)
+
+``` yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: counter-np
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      protocol: TCP
+      nodePort: 30001
+  selector:
+    app: counter
+    tire: app
+```
 
 ## ref
 
