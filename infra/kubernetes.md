@@ -37,6 +37,7 @@
     - [Service config](#service-config)
     - [Service(ClusterIP) config](#serviceclusterip-config)
     - [Service(NodePort) config](#servicenodeport-config)
+    - [Service(LoadBalancer) config](#serviceloadbalancer-config)
   - [ref](#ref)
 
 ## Architecture
@@ -618,6 +619,29 @@ spec:
   selector:
     app: counter
     tire: app
+```
+
+### Service(LoadBalancer) config
+
+- `NodePort`는 노드가 사라졌을 때 자동으로 다른 노드를 통해 접근이 불가능한 단점이 있음(1:1 매칭)
+- 따라서 이를 1:N 매칭시켜줄 방법이 필요한데, 해당 솔루션으로 Service에서 `LoadBalancer`를 제공함
+- *주의 : 클라우드 환경이 아닌 로컬 환경에서는 LoadBalancer의 사용이 제한적임
+
+``` yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: counter-lb
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 30000
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app: counter
+    tier: app
+
 ```
 
 ## ref
