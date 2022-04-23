@@ -13,6 +13,8 @@
   - [반복문(for)](#반복문for)
   - [pointer](#pointer)
   - [배열(slice, array)](#배열slice-array)
+    - [slice 선언 with make()](#slice-선언-with-make)
+    - [slice capacity](#slice-capacity)
   - [map](#map)
   - [구조체(struct)](#구조체struct)
   - [receiver와 method](#receiver와-method)
@@ -260,7 +262,9 @@ func main() {
 
 - go는 배열을 나타내는 built-in 자료형으로 `slice`, `array`를 제공한다
 - `slice`와 `array`의 차이점은 용량(배열의 크기)를 지정하는 것인데, array는 고정 크기, slice는 유동적인 크기를 가지며, 선언방법도 다르다
-- 슬라이싱, 요소 추가(append), 길이 측정(length), 용량 측정(capacity) 등이 가능하다
+(+ slice는 내부적으로 배열 pointer,length, capacity 값을 가진다)
+- 슬라이싱, 요소 추가(append), 복사(copy)길이 측정(length), 용량 측정(capacity) 등이 가능하다
+
 - 아래 예시를 통해서 자세히 알아보자
 
 ``` go
@@ -271,9 +275,18 @@ func main() {
   // [1 2 3] [1 2 3 0 0]
   fmt.Println(slice, array)
 
-  // append()를 이용한 요소 추가, slice에만 가능하다
+  // built-in 함수인 append()를 이용한 요소 추가, slice에만 가능하다
   // [1 2 3 3 4 5]
   fmt.Println(append(slice, 3, 4, 5))
+  // slice에 다른 slice를 append하는 것도 가능
+  // [1 2 3 5 6 7]
+  fmt.Println(append(slice, []int{5, 6, 7}...))
+
+  target := []int{0, 0, 0}
+  // target := make([]int, len(slice), cap(slice))
+  // target 과 slice의 length가 일치하지 않으면 복사되지 않으니 주의!!
+  // 3 [1 2 3] [1 2 3]
+  fmt.Println(copy(target, slice), target, slice)
 
   // 기존 slice나 array를 슬라이싱 (파이썬 문법과 유사하다)
   sliceOfArray := array[:2]
@@ -282,7 +295,30 @@ func main() {
   // [1 2] 2 5
   fmt.Println(sliceOfArray, len(sliceOfArray), cap(sliceOfArray))
 }
+
 ```
+
+### slice 선언 with make()
+
+- slice에 대해서 좀 더 알아보자
+- slice는 go의 built-in function인 make()로도 선언이 가능하다
+- make()를 이용하면 slice의 `초기화 길이`(length), `용량`(capacity)를 지정할 수 있다
+- `length`를 0아닌 값으로 지정하면 length 값 만큼 기본 값이 저장되므로 주의! (아래 예시 확인)
+
+``` go
+func main() {
+  // make(type, length, capacity)
+  s := make([]int, 5, 10)
+  // 5 10 [0 0 0 0 0]
+  fmt.Println(len(s), cap(s), s)
+}
+```
+
+### slice capacity
+
+- 보통 대부분의 언어에서 동적 배열(e.g.slice)은 요소를 추가할 때마다 용량을 동적으로 증가시킨다
+- go에서는 지정한 capacity를 초과했을 때 기존 capacity를 2배로 늘린 새로운 배열을 생성해 기존 배열의 요소들을 복사한다
+- 즉 위 과정으로 인해서 오버헤드가 발생할 수 있기 때문에 slice의 용량을 적절히 선언해야한다
 
 ## map
 
@@ -329,7 +365,6 @@ func main() {
 - 추가로 함수나 구조체에 대한 주석은 해당 주체와 동일한 이름으로 시작해야한다
 - 주석을 통해 사용하는 사람들에게 힌트를 줄 수도 있다
 - 다음 예시를 통해 알아보자
-
 
 ``` go
 // Account struct
