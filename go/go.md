@@ -23,6 +23,7 @@
   - [타입(type)](#타입type)
   - [고루틴(goroutine)](#고루틴goroutine)
   - [channels](#channels)
+    - [단방향 channel](#단방향-channel)
 
 ## 개요
 
@@ -543,4 +544,15 @@ func main() {
     fmt.Println(<-channel)
   }
 }
+```
+
+### 단방향 channel
+
+- 기본적으로 channel은 양방향이지만 `<-`를 이용해 channel의 방향을 단 방향으로 한정할 수 있다
+
+``` go
+// 수신만 가능한 channel
+readOnlyChannel := make(<-chan string)
+// 전송만 가능한 channel
+writeOnlyChannel := make(chan<- string)
 ```
