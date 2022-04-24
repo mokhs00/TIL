@@ -556,6 +556,50 @@ func main() {
 reciveOnlyChannel := make(<-chan string)
 // 전송만 가능한 channel
 sendOnlyChannel := make(chan<- string)
+
+// 함수 파라미터에도 가능함
+func send(c chan<- string){
+  // ...
+}
 ```
 
 ### buffered channel
+
+- buffer를 가진 channel을 만들 수도 있다
+- `make(chan, N) N : 버퍼 크기`를 이용해 channel을 선언할 수 있다
+- make(chan)을 통해 생성한 채널은 기본적으로 unbuffered channel이다
+- buffer를 가진 channel의 큰 특징은 기존 unbuffered channel은 수신부(reciver)와 송신부(sender)가 서로를 기다리는 구조를 가지는데 buffer chanenl을 이용하면 서로 기다릴 필요 없이 다음 로직을 수행할 수 있게 된다
+- 말이 어려운데 아래 예시를 통해서 이해해보자
+
+``` go
+// 아래 코드는 별도의 수신루틴이 없는 상태여서 c<-1에서 error 발생
+// fatal error: all goroutines are asleep - deadlock! 
+func main() {
+  c := make(chan int)
+
+  c <- 1 // 한 프로세스에서 unbuffered channel은 수신 루틴을 발견하지 못하기에 별도의 goroutine 선언이 필요
+  fmt.Println(<-c)
+}
+
+
+// 위 코드가 가능하게 하려면 아래처럼 구성해야함
+func main() {
+  c := make(chan int)
+
+  go func() {
+    c <- 1
+  }()
+  fmt.Println(<-c)
+}
+
+
+// buffered channel을 이용하면 다음과 같이 구성할 수 있고 기존의 에러가 발생하지 않음
+func main() {
+  c := make(chan int, 1)
+
+  c <- 1
+  fmt.Println(<-c)
+}
+```
+
+
