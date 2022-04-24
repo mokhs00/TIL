@@ -26,6 +26,7 @@
     - [단방향 channel](#단방향-channel)
     - [buffered channel](#buffered-channel)
     - [channel range, close](#channel-range-close)
+    - [channel select](#channel-select)
 
 ## 개요
 
@@ -629,5 +630,40 @@ func main() {
   }
 }
 
+
+```
+
+### channel select
+
+- select는 다수의 goroutine, 채널을 다룰 수 있게 도와준다
+- 기존 switch case와 동일하게 case에 해당하는 연산(채널 데이터 수신)이 일어날 때 break 된다
+- 이를 이용해 다양한 패턴이 가능할 것으로 보인다
+
+``` go
+// go tour 공식 예제
+func fibonacci(c, quit chan int) {
+  x, y := 0, 1
+  for {
+    select {
+    case c <- x:
+      x, y = y, x+y
+    case <-quit:
+      fmt.Println("quit")
+      return
+    }
+  }
+}
+
+func main() {
+  c := make(chan int)
+  quit := make(chan int)
+  go func() {
+    for i := 0; i < 10; i++ {
+      fmt.Println(<-c)
+    }
+    quit <- 0
+  }()
+  fibonacci(c, quit)
+}
 
 ```
