@@ -10,6 +10,7 @@
     - [defer](#defer)
     - [export function](#export-function)
   - [조건문(if, switch)](#조건문if-switch)
+    - [switch, fallthrough](#switch-fallthrough)
   - [반복문(for)](#반복문for)
   - [pointer](#pointer)
   - [배열(slice, array)](#배열slice-array)
@@ -198,7 +199,6 @@ func canIView(age int) bool {
 
 // switch
 func canIView2(age int) bool {
-
   switch koreanAge := age + 2; {
   case koreanAge < 18:
     return false
@@ -207,6 +207,12 @@ func canIView2(age int) bool {
   }
 }
 ```
+
+### switch, fallthrough
+
+- go의 switch는 case마다 break문의 여부에 따라 연산이 종료되는 다른 언어와는 다르게 break문이 없어도 case의 조건과 일치한다면 switch 연산을 빠져나오게 된다
+- 이는 go 컴파일러가 자동으로 case마다 break문을 추가해주기 때문이다
+- break하고 싶지 않다면 다음과 같이 fallthrough 키워드를 이용해 break하지 않고 아래 case로 내려줄 수 있다
 
 ## 반복문(for)
 
