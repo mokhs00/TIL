@@ -24,6 +24,7 @@
   - [고루틴(goroutine)](#고루틴goroutine)
   - [channels](#channels)
     - [단방향 channel](#단방향-channel)
+    - [buffered channel](#buffered-channel)
 
 ## 개요
 
@@ -552,7 +553,9 @@ func main() {
 
 ``` go
 // 수신만 가능한 channel
-readOnlyChannel := make(<-chan string)
+reciveOnlyChannel := make(<-chan string)
 // 전송만 가능한 channel
-writeOnlyChannel := make(chan<- string)
+sendOnlyChannel := make(chan<- string)
 ```
+
+### buffered channel
