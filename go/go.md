@@ -213,6 +213,29 @@ func canIView2(age int) bool {
 - go의 switch는 case마다 break문의 여부에 따라 연산이 종료되는 다른 언어와는 다르게 break문이 없어도 case의 조건과 일치한다면 switch 연산을 빠져나오게 된다
 - 이는 go 컴파일러가 자동으로 case마다 break문을 추가해주기 때문이다
 - break하고 싶지 않다면 다음과 같이 fallthrough 키워드를 이용해 break하지 않고 아래 case로 내려줄 수 있다
+- 이 때 주의할 점은 아래 case에 일치하는지 여부와 상관없이 case 안의 연산을 모두 수행한다는 점이다
+
+``` go
+func main() {
+  v := 1
+  switch v {
+  case 1:
+    fmt.Println("1")
+    fallthrough
+  case 2: // 2와 일치하지 않지만 fallthrough에 의해서 case 와 일치할 때와 동일한 연산 수행
+    fmt.Println("2")
+    fallthrough
+  default:
+    fmt.Println("default")
+  }
+  
+  /* 출력
+  1
+  2
+  default
+  */
+}
+```
 
 ## 반복문(for)
 
