@@ -609,3 +609,25 @@ func main() {
 - 또한 `range`를 이용해 channel이 close될 떄까지 반복해서 channel 값을 수신할 수 있다 -> 이런 경우에는 close가 필수!
 - 주의! 닫힌 channel에 데이터를 전송하는 것은 panic을 야기할 수 있으므로 channel 전송자만 close 해야만 함
 - 보통 range channel 반복문을 사용하거나 수신자가 더 이상 수신될 데이터가 없다는 것을 명시해야하는 경우가 이나면 channel을 임의로 close할 필요는 없다
+
+``` go
+// go tour 공식 예제
+func fibonacci(n int, c chan int) {
+  x, y := 0, 1
+  for i := 0; i < n; i++ {
+    c <- x
+    x, y = y, x+y
+  }
+  close(c)
+}
+
+func main() {
+  c := make(chan int, 10)
+  go fibonacci(cap(c), c)
+  for i := range c {
+    fmt.Println(i)
+  }
+}
+
+
+```
