@@ -38,6 +38,7 @@
     - [Service(ClusterIP) config](#serviceclusterip-config)
     - [Service(NodePort) config](#servicenodeport-config)
     - [Service(LoadBalancer) config](#serviceloadbalancer-config)
+    - [Ingress config](#ingress-config)
   - [ref](#ref)
 
 ## Architecture
@@ -644,6 +645,10 @@ spec:
     tier: app
 
 ```
+
+### Ingress config
+
+- 하나의 클러스터에서 여러 서비스를 운영하면 외부로 부터의 연결을 받을 때 라우팅이 필요한데, 이를 위해 `Ingress`를 사용할 수 있다
 
 ## ref
 
