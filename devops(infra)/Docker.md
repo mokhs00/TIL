@@ -16,3 +16,8 @@
   - docker image와 config 파일이 있기 때문에 공유, 재구성, 분배가 쉬움
   (Sharing, re-building and distribution is easy)
   - 컴퓨터 머신 전체를 캡슐화 하는 것이 아닌 apps/ 환경 기반으로 캡슐화 가능(Encapsulate apps/ environments instead of "whole machines")
+
+## images vs Containers
+
+- image는 container의 base가 되는 템플릿
+- container는 실제 인스턴스로 실행되는 실체..
