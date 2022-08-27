@@ -1,5 +1,7 @@
 - [개요](#개요)
   - [RDS](#rds)
+    - [Encryption](#encryption)
+    - [Aurora DB](#aurora-db)
     - [ElastiCache](#elasticache)
 
 # 개요
@@ -11,6 +13,45 @@
 - 동일 리전 레플리카 Sync 추가 비용 X  <=> 다중 리전 레플리카 Sync 추가 비용 O(Network cost)
 - 마스터 DB의 리전 외에 다른 리전에 스탠바이 RDS를 두어 가용성 확보 가능
 - RDS 읽기 전용 복제본은 비동기식 복제, 다중 AZ의 복제는 동기식 복제를 사용
+
+### Encryption
+
+- DB instance를 처음 생성할때만 가능. 처음 생성 시에 암호화하지 않았다면 스냅샷을 생성해서 교체 가능
+- AWS KMS를 이용해 암호화 가능
+- master를 암호화하지 않으면 read replicas를 암호화 불가능
+- SSL
+- `Encryption Operations e.g...`
+  - Encrypting RDS backups
+    - Snapshots of un-encrypted RDS databases are un-encrypted
+    - Snapshots of encrypted RDS databases are encrypted
+    - Can copy a snapshot into an encrypted one
+  - To encrypt an un-encrypted RDS database
+    - Create a snapshot of the un-encrypted database
+    - Copy the snapshot and enable encryption for the snapshot
+    - Restore the database from the encrypted snapshot
+    - Migrate applications to the new database, and delete the old database
+
+### Aurora DB
+
+- Automatic fail-over
+- Backup and Recovery
+- isolation and security
+- Industry compliance
+- Auto scaling(Push-button scaling)
+- Automated Patching with Zero Downtime
+- Advanced Monitoring
+- Routine Maintenance
+- Backtrack: restore data at any point of time without using backups
+
+- `Writer Endpoint`
+  - master 노드를 가리킴 마스터 노드 장애 시에도 Wirhter Endpoint와 통신해 가용한 인스턴스로 리디렉션됨
+- `Reader Endpoint`
+  - read replica에 대한 Reader Endpoint를 제공하여 로드밸런싱 지원
+  - auto scaling으로 인해서 read replica에 대한 Endpoint 추적이 어려운 것을 해결할 수 있음
+
+- Security
+  - 다른 RDS와 유사
+  - SSL, KMS 이용 암호화, SSL, IAM 인증… etc..
 
 ### ElastiCache
 
