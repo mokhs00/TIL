@@ -79,7 +79,7 @@ func main() {
 
 ``` go
 
-var Typ = []*Basic{
+var Type = []*Basic{
   Invalid: {Invalid, 0, "invalid type"},
 
   Bool:          {Bool, IsBoolean, "bool"},
