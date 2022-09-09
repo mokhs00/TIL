@@ -12,6 +12,12 @@
     - [VPC Peering](#vpc-peering)
     - [VPC Endpoints](#vpc-endpoints)
     - [Site to Site VPN & Direct Connect](#site-to-site-vpn--direct-connect)
+  - [ECS](#ecs)
+    - [ECS Service Auto Scaling](#ecs-service-auto-scaling)
+    - [ECS Task Definitions](#ecs-task-definitions)
+    - [ECS Tasks Placement](#ecs-tasks-placement)
+  - [ECR](#ecr)
+  - [EKS](#eks)
 
 # 개요
 
@@ -293,3 +299,223 @@
   - private network
   - 구성이 오래걸림 (Takes at least a month to establish)
 - Site-to-Site VPN, Direct Connect는 VPC endpoints에 연결 불가능
+
+## ECS
+
+- **E**lastic **C**ontainer **S**ervice
+- `EC2 Launch Type`
+  - Launch **ECS Tasks** on ECS Clusters
+  - ECS cluster에서 해당 Launch Type 선택 시 EC2 instance를 관리해야함
+  - must run the ECS Agent to register in the ECS Cluster
+- `Fargate Launch Type`
+  - 관리할 EC2 인스턴스가 없음 do not provision the infrastructure
+    (no EC2 instances to manage)
+  - All Serverless
+  - scaling하기 위해서는 간단하게 task의 수를 조정하기만 하면 됨
+- `IAM Roles for ECS`
+  - **EC2 Instance Profile (EC2 Launch Type only)**
+    - Used by the ECS agent
+    - Makes API calls to ECS service
+    - Send contrainer logs to CloudWatch Logs
+    - Pull Docker image from ECR
+    - Reference sensitive data in Secrets Manager or SSM Parameter Store
+  - **ECS Task Role**
+    - Allows each task to have specific role
+    - Use different roles for the different ECS Services you run
+    - Task Role is defined in the task definition
+- `Load Balancer Integrations`
+  - **ALB** suppported and works for most use cases
+  - **NLB** recommended only for high throughput / high performance use cases, or pair it with AWS Private Link
+  - **ELB supported but not recommend (no advanced features - no Fargate)**
+- `Data volumes (EFS)`
+  - Mount EFS file systems onto ECS tasks
+  - Works for both EC2 and Fargate launch types
+  - Tasks running in any AZ will share the same data in the EFS file system
+  - Fargate + EFS = Serverless 이 조합 좋다.. no manage server
+  - Use caes: persistent multi-AZ shared storage for your containers
+    - **But, Amazon Fsx For Lustre is not supported**
+    - **S3 cannot be mounted as a file system for ECS task**
+
+### ECS Service Auto Scaling
+
+- ECS auto scaling uses **AWS Application Auto Scaling**
+  - **다음 지표들 확인가능**
+    - ECS Service Average CPU Utilization
+    - ECS Service Average Memory Utilization - Scale on RAM
+    - ALB Request Count Per Target - metric coming from the ALB
+- 종류
+  - **Target Tacking** - scaled based on target value for a specific CloudWatch metric
+  - **Step Scaling** - scale based on specified CloudWatch Alarm
+  - **Scheduled Scaling** - scale based on specified date/time (predictable changes)
+- note;
+  - ECS Service Auto Scaling (task level) ≠ EC2 Auto Scaling (EC2 instance level)
+  - Fargate Auto scaling is much easier to setup ⇒ because serverless
+- EC2 Launch Type
+
+### ECS Task Definitions
+
+- Task definitions are metadata in JSON form to tell ECS how to run a Docker container
+- It contains crucial information, such as:
+  - Image Name
+  - Port Binding for Container and Host
+  - Memory and CPU required
+  - Env variables
+  - Networking information
+  - IAM Role
+  - Logging configuration (ex CloudWatch)
+- Can define up to 10 containers in a Task Definition
+- `태스크 정의 당 IAM 역할이 할당됨 One IAM Role per Task Definition`
+  - 각 태스크는 해당 IAM 역할을 자동으로 상속하게 됨
+- `ECS Load Balancing` when using Task Definitions
+  - **EC2 Launch Type**
+    - We get a Dynamic Host Port Mapping if you define only the container port in the **task definition**
+    - The ALB finds the right port on your EC2 instances **using Dynamic Host Port Mapping**
+    - you must allow on the EC2 instance’s Security Group any port from the ALB’s Security Group
+  - **Fargate Launch Type**
+    - Each Task has a unique private IP using ENI and each task have all same port
+    - Only define the container port (host port is not applicable)
+    - e.g.
+      - ECS ENI SG
+        - Allow port 80 from the ALB
+      - ALB SG
+        - Allow port 80/443 from web
+- `Environment Variables`
+  - Variable
+    - Hardcoded - e.g. URLs
+    - SSM Parameter Store - sensitive variables (e.g. API keys, shared configs)
+    - Secrets Manager - sensitive variables (e.g. DB passwords)
+  - loading from Files (=bulk loading) -  Amazone S3
+- `Data Volumes (Bind Mounts)` (ECS task간 공유)
+  - Share data between multiple containers in the same Task Definition
+  - Works for both EC2 and Fargate tasks
+  - sidecar pattern 이용 시 `/var/logs` 라는 임의의 shared storage를 bind mount해서 사용할 수 있음
+  - EC2 Tasks -  using EC2 instance storage
+    - Data are tied to the lifecycle of the EC2 instance
+  - Fargate Tasks - using ephermeral storage
+    - Data are tied to the container using them
+    - 20 GiB - 200 GiB (default 20GiB)
+  - Use cases:
+    - Share ephemeral data between multiple containers
+    - sidecar container pattern, where the sidecar container used to send metrics/logs to other destinations (separation of concerns)
+
+### ECS Tasks Placement
+
+- ECS task 배치 전략에 대한 정의
+- **EC2 launch type**에서만 유효함
+- task를 어떤 instance에 배치하고 어떤 instance terminate할지(scale in)를 결정
+- `task placement strategy`, `task placement constraints`를 정의할 수 있음
+- task placement process는 다음과 같음
+    1. task definition에 요구하는 CPU, memory, port에 만족하는 instance를 식별
+    2. task placement constraint(배치 제한)을 기반으로 instance를 식별
+    3. task plcaement strategies를 기반으로 instance를 식별
+- `task placement strategies`
+  - **Binpack**
+    - Place tasks based on the least available amount of CPU or memory
+    - This minimizes the number of instances in use (cost savings)
+    - 한 EC2 instance에 배치 가능한만큼 컨테이너를 꽉 채운 후 다음 instance에 컨테이너를 배치
+    - e.g.
+
+            ```json
+            "placementStrategy": [
+             {
+              "field": "memory",
+              "type": "binpack"
+             }
+            ]
+            ```
+
+  - **Random**
+    - just place the task random
+    - e.g.
+
+            ```json
+            "placementStrategy": [
+             {
+              "type": "random"
+             }
+            ]
+            ```
+
+  - **Spread**
+    - 특정값을 기반으로 분산 배치
+    - 특정값은 instanceId, attribute:ecs.availability-zone 등이 될 수 있음
+    - e.g.
+
+            ```json
+            "placementStrategy": [
+             {
+              "field": "attribute:ecs.availability-zone",
+              "type": "spread"
+             }
+            ]
+            ```
+
+  - **위 배치 전략들을 섞어서 사용할 수도 있음**
+    - e.g.
+
+            ```json
+            "placementStrategy": [
+             {
+              "field": "attribute:ecs.availability-zone",
+              "type": "spread"
+             },
+             {
+              "field": "instanceId",
+              "type": "spread"
+             }
+            ]
+            
+            // other case
+            "placementStrategy": [
+             {
+              "field": "attribute:ecs.availability-zone",
+              "type": "spread"
+             },
+             {
+              "field": "memory",
+              "type": "binpack"
+             }
+            ]
+            ```
+
+- `task placement constraints`
+  - **distinctInstance**
+    - place each task on a different contrainer instance
+    - e.g.
+
+            ```json
+            "placementConstraints": [
+             {
+              "type": "distinctInstace"
+             }
+            ]
+            ```
+
+  - **memberOf**
+    - place task on instances that satisfy an expression
+    - uses the cluster query language
+    - e.g.
+
+            ```json
+            "placementConstraints": [
+             {
+              "expression": "attributes:ecs.instance-type =~ t2.*",
+              "type": "distinctInstace"
+             }
+            ]
+            ```
+
+## ECR
+
+- Elastic Container Registry
+- Store and manage Docker images on AWS
+- public repo도 가능 (Amazon ECR Public Gallery)
+- 모든 이미지는 Amazon S3에 저장됨
+- ***Access is controlled through IAM**
+- 이미지 취약점 스캐닝, 버저닝, 태그, 수명 주기 확인 지원
+
+## EKS
+
+- Elastic Kubernetes Service
+- managed Kubernetes clusters on AWS
+- EKS supports EC2 if you want to deploy worker node, Fargate to deploy serverless containers
