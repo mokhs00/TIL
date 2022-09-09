@@ -4,6 +4,14 @@
     - [Aurora DB](#aurora-db)
     - [ElastiCache](#elasticache)
   - [Route 53](#route-53)
+  - [VPC](#vpc)
+    - [Subnet](#subnet)
+    - [Internet Gateway & NAT Gateways](#internet-gateway--nat-gateways)
+    - [Network ACL & Security Groups](#network-acl--security-groups)
+    - [VPC Flow Logs](#vpc-flow-logs)
+    - [VPC Peering](#vpc-peering)
+    - [VPC Endpoints](#vpc-endpoints)
+    - [Site to Site VPN & Direct Connect](#site-to-site-vpn--direct-connect)
 
 # 개요
 
@@ -211,3 +219,77 @@
     - `How to monitor Private Hosted Zones`
       - Route 53 health checker는 외부 VPC에 있기에 외부 접근이 불가능한 private VPA, on-premises resource에 접근 불가능
       - 대신에 CloudWatch Metric기반으로 CloudWatch Alarm을 만들어 이를 Route 53 Health checker가 모니터링 하도록 할 수 있음
+
+## VPC
+
+- Virtual Private Cloud
+- private network to deploy your resources (regional resource)
+
+### Subnet
+
+- Subnets allow you to partition your network inside your PC(Availability Zone resource)
+  - public subnet is a subnet that is accessible from the internet
+  - private subnet is a subnet that is not accessible from the internet
+- To define access to the internet and between subnets, we use **Route Tables**
+
+### Internet Gateway & NAT Gateways
+
+- Internet Gateways helps our VPC instances connect with the internet
+  - Public Subnets have a route to the internet gateway
+- NAT Gateways (AWS-managed) & NAT Instances (self-manageed) allow your instances in your Private Subnets to access the internet while remaining private
+  - 외부에서의 접근은 막고 해당 인스턴스에서 외부로 접근하는 것을 허용하기 위해사용
+  - NAT 게이트웨이는 public subnet에 두고 private subnet에 있는 인스턴스를 연결함
+
+### Network ACL & Security Groups
+
+- **Network ACL (NACL)**
+  - **Stateless, subnet rules for inbound and outbound**
+  - A firewall which controls traffic from and to subnet
+  - Can have ALLOW and DENY rules
+  - Are attached at the Subnet level
+  - Rules only include IP address
+  - 기본 VPC에서 기본 NACL은 in-out 트래픽을 모두 허용함
+- Security Groups
+  - **Stateful, operate at the EC2 instance level or ENI**(Elastic Network Interface)
+  - A firewall that controls traffic to and from an **ENI** / an EC2 Instance
+  - Can have only ALLOW rules
+  - Rules include IP addresses and other security groups
+
+### VPC Flow Logs
+
+- Capture informationo about IP traffic going into your interfaces
+  - VPC Flow logs
+  - Subnet Flow logs
+  - Elastic Network Interface Flow logs
+- Helps to monitor & troubleshoot connectiity issues
+- Captures network information from AWS managed interfaces too: ELB, ElastiCache, RDS, Autora, etc…
+- VPC Flow logs data can go to S3 / Cloud Watch Logs
+
+### VPC Peering
+
+- AWS network를 이용해 비공개로 2개의 VPC를 연결
+- 연결된 VPC가 같은 network에 있는 것처럼 만들어줌
+- 각 VPC에 정의된 IP address 범위가 겹치지 않는지 확인해야함 만약 겹치면 네트워크가 어디로 가야할지 찾을 수 없음
+- VPC Peering은 전이되지 않으며 A, B, C 3개의 VPC를 연결하고 싶다면 각각 연결해줘야함
+(A-B, B-C, A-C)
+
+### VPC Endpoints
+
+- VPC에서 AWS service로의 비공개 접속을 원할 때 사용
+- VPC Endpoitns는 public www network 대신에 private network를 사용하여 AWS Service에 연결하는 것을 허용
+- 따라서 이는 AWS service에 access 하는데 Lower latency와 보안성을 제공함
+- VPC Endpoint Gateway: S3 & DynamoDB 연결 시 사용
+- VPC Enpoint Interface: 나머지 리소스 연결 시 사용
+
+### Site to Site VPN & Direct Connect
+
+- Site to Site VPN
+  - 온프레미스 VPN장치와 AWS를 연결
+  - connection은 자동으로 encryted됨
+  - public internet상에서 요청 전송
+- Direct Connect (DX)
+  - 온프레미스와 AWS를 물리적으로 연결
+  - connection is private, secure and fast
+  - private network
+  - 구성이 오래걸림 (Takes at least a month to establish)
+- Site-to-Site VPN, Direct Connect는 VPC endpoints에 연결 불가능
