@@ -19,6 +19,16 @@
     - [chown](#chown)
     - [ln](#ln)
     - [파일 내용 확인 command](#파일-내용-확인-command)
+  - [리눅스 시작과 종료](#리눅스-시작과-종료)
+    - [초기화 데몬](#초기화-데몬)
+    - [init proccess](#init-proccess)
+    - [init process와 runlevel](#init-process와-runlevel)
+    - [runlevel](#runlevel)
+    - [telinit command](#telinit-command)
+    - [runlevel command](#runlevel-command)
+    - [chkconfig command](#chkconfig-command)
+    - [service command](#service-command)
+    - [시스템 종료 절차](#시스템-종료-절차)
 
 ## shell commands
 
@@ -231,3 +241,100 @@
   - e.g.
     - cat > cat1.txt
     - cat cat*.txt > total.txt
+
+## 리눅스 시작과 종료
+
+- `리눅스 부팅 과정`은 다음 차례로 진행됨
+- POST -> BIOS -> 부트로더 -> Boot device -> GRUB -> kernel + initramfs -> Upstart(/sbin/init) -> `/etc/init/rcS.conf` or `/etc/init/rc.conf`
+
+### 초기화 데몬
+
+- **전통적 init 데몬**
+  - `System V init 데몬`이라고도 함
+  - runlevel에 기반하여 서비스를 실행하는 방식
+    - runlevel에 따라 실행되어야 또는 중단되어야 하는 서비스가 정해짐
+  - 시간이 오래 걸리며, 복잡한 초기화 스크립트로 인해 새로운 하드웨어나 서비스의 등장에 효율적 대처가 어려움
+- **업스타트 init 데몬과 systemd 데몬**
+  - event 기반으로 서비스를 실행하는 방식
+  - 복잡한 스크립트가 간단한 설정 파일들로 대체됨
+  - Upstart는 Ubuntu에서 개발되어 2006년에 포함되었고 RHEL 6에서 채택됨
+  - RHEL 7과 SUSE 및 Ubuntu 16.04에서 systemd가 Upstart를 대체함
+
+### init proccess
+
+- Upstart는 `/sbin/init` 데몬으로 구현됨
+- 모든 사용자 프로세스의 최상위 조상 프로세스(PID = 1)
+  - `ps -e` 명령으로 확인
+- 나머지 부팅 과정(=시스템 초기화 작업)을 실행함
+  - 사용자 환경 준비, 시스템 운영을 위한 서비스 프로그램 실행 등
+- 지속적으로 실행되며 시스템 운영을 관리하고 셧다운 처리
+  - 사용자 프로세스의 정리, 로그아웃 후 로그인 서비스 제공 등
+- `Upstart init 데몬`은 /etc/init 디렉토리에 있는 job 설정 파일을 읽음
+  - job 설정 파일의 확장자는 .conf
+  - init 데몬이 실행하는 job(실행 파일 or 쉘 스크립트)이 정의되어 있음
+    - 이벤트가 발생할 때 상응하는 job을 시작하거나 중지시킴
+- 전통적 init 데몬은 /etc/inittab 파일을 환경 설정 파일로 사용했음
+  - 현재는 초기 런레벨을 설정하는 용도로만 사용됨
+  - 이 파일에 업스타트 초기화 과정을 설명하는 내용이 있음
+  - 하휘호환을 지키도록 설계됨
+- `initctl` command
+  - job의 상태를 확인하거나 수동으로 시작/중지시키는 명령
+  - e.g. initctl command job
+    - initctl list
+    - initctl start job, initctl stop job
+
+### init process와 runlevel
+
+- 초기 런레벨은 `/etc/inittab` 파일에서 `id:5:initdefault:`와 같이 설정되어 있음
+- `런레벨 5`로 부팅되는 경우 `/etc/rc.d/rc5.d` 디렉토리에 존재하는 스크립트 파일이 실행됨
+  - 이름이 K로 시작하면 해당 서비스의 종료를 위한 것이고
+  - S로 시작하면 해당 서비스의 시작을 위한 것임
+- 런레벨 2, 3, 5에서 가장 마지막에 실행되는 스크립트는 S99local이 가리키는 `/etc/rc.d/rc.local`
+  - 여기에 관리자가 원하는 특별한 초기화 작업을 추가 정의할 수 있음
+
+### runlevel
+
+- `0`: 시스템 종료
+- `1`: 단일 사용자 모드, 로그인 과정 없이 root 사용자로 로그인됨 콘솔에서 시스템 점검이나 복구를 위한 관리자 모드로 사용됨 명령행 인터페이스(CLI)가 제공되며 네트워크 서비스는 제공되지 않음
+- `2`: 기본적으로 네트워크 서비스를 제공하지 않는 다중 사용자 모드
+- `3`: 모든 네트워킹을 지원하는 다중 사용자 모드. 리눅스 초기 시절에 보편적으로 사용되었던 레벨이며, CLI(텍스트 모드)만 지원
+- `4`: 사용되지 않음
+- `5`: 그래픽 사용자 환경을 제공하는 다중 사용자 모드 최근 배포판에서 default 설정
+- `6`: 시스템 재부팅
+
+### telinit command
+
+- runlevel 변경하는 관리자 command
+- telinit runlevel
+
+### runlevel command
+
+- 이전 runlevel과 현재 runrevel을 확인하는 명령
+
+### chkconfig command
+
+- 부팅 시 런레벨에 따른 시스템 서비스의 활성화 여부를 확인하거나 변경하는 명령
+- `chkconfig [--list] [service]`
+  - 각 런레벨에서 해당 서비스의 활성화 여부를 알려줌
+- `chkconfig [--level levels] service <on|off>`
+  - 특정 런레벨에서 서비스의 활성화 여부를 지정
+  - chkconfig --level 345 httpd on -> 런레벨 3, 4, 5에서 httpd 서비스를 활성화
+
+### service command
+
+- 시스템 운영 중에 `/etc/rc.d/init.d/` 디렉토리에 존재하는 초기 스크립트를 수동으로 실행 또는 중지시키는 관리자 명령
+- `service script command`
+  - e.g. `service httpd start`
+  - `/etc/rc.d/init.d/httpd start` 도 가능
+  - command는 start, stop, restart, reload, status 중 하나
+- `service --status-all`: 모든 초기화 스크립트의 상태를 출력
+
+### 시스템 종료 절차
+
+- 실제 init 프로세스를 통해 런레벨을 바꾸어 셧다운 처리
+  - init 프로세스는 모든 프로세스에게 종료를 알림
+  - 각 프로세스가 스스로 종료하도록 TERM signal(terminate)을 보냄
+  - 종료되지 않은 프로세스에게 KILL signal을 보내 강제 종료
+  - 시스템 파일을 잠그고 파일 시스템을 언마운트
+  - 버퍼에 있는 데이터를 파일 시스템에 기록(sync)
+  - 시스템 호출을 통해 커널에 재부팅 또는 종료를 요청
