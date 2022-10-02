@@ -30,6 +30,11 @@
     - [SSL/TLS](#ssltls)
     - [Connection draining](#connection-draining)
     - [Auto Scaling Group](#auto-scaling-group)
+  - [S3](#s3)
+    - [Bucket](#bucket)
+    - [Objects](#objects)
+    - [Versioning](#versioning)
+    - [S3 Encryption](#s3-encryption)
 
 # 개요
 
@@ -697,4 +702,48 @@ Scaling Cooldowns
 
 - 스케일링 이후에 cooldown period를 가짐 (defualt 300 seconds)
 - 지표 안정화를 위해서 이 기간동안 ASG가 추가 인스턴스를 실행 또는 종료할 수 없음
--
+
+## S3
+
+### Bucket
+
+- **globally unique name**
+- **defined at the region level**
+- Naming convention
+  - no uppercase
+  - no underscore
+  - 3-63 characters long
+  - Not an IP
+  - Must start with lowercase letter or number
+
+### Objects
+
+- **Object=file**
+- 다음 정보들로 이루어짐
+  - Objects (files) have a key e.g. s3://some-bucket/some_file.txt
+  - **Object values are the content of the body**
+    - Max Object Size is 5TB
+    - if uploading more than 5GB, must use `multi-part upload`
+  - **Metadata** (list of text key/value pairs - system or user metadata)
+  - **Tags** (Unicode key / value pair - up to 10) - useful for security/lifecycle
+  - **Version ID** (if versioning is enabled)
+
+### Versioning
+
+- you can bucket level versioning
+- suspending versioning does not delete the previous versions
+- Any file that is not versioned prior to enabling versioning will have version `null`
+
+### S3 Encryption
+
+- method
+  - `SSE-S3`: encrypt S3 obejcts using keys handled & managed by AWS
+    - SSE = Server Side Encryption
+    - AES-256 encryption
+    - object upload 시에 header에 `“x-amz-server-side-encryption": “AES256”` 를 추가하면 S3에서 관리하는 키로 암호화
+  - `SSE-KMS`: leverage AWS Key Management Service to manage encryption keys
+    - KMS 이용한 암호화
+    - set header  `“x-amz-server-side-encryption": “aws:kms”`
+  - `SSE-C`: when you want to manage your own encyption keys
+    - must HTTPS
+  - `Client Side Encryption`
