@@ -35,6 +35,11 @@
     - [Objects](#objects)
     - [Versioning](#versioning)
     - [S3 Encryption](#s3-encryption)
+  - [CloudFront](#cloudfront)
+    - [Origins](#origins)
+    - [CloudFront vs S3 Cross Region Replication](#cloudfront-vs-s3-cross-region-replication)
+    - [Security](#security)
+    - [CloudFront Signed URL / Signed Cookies](#cloudfront-signed-url--signed-cookies)
 
 # 개요
 
@@ -747,3 +752,60 @@ Scaling Cooldowns
   - `SSE-C`: when you want to manage your own encyption keys
     - must HTTPS
   - `Client Side Encryption`
+
+## CloudFront
+
+- CDN
+- DDos protection, integration with Shield, AWS Web Application Firewall
+
+### Origins
+
+- S3 bucket
+  - Enhanced security with CloudFront OAI (Origin Access Identity) = IAM role
+  - can be used as an ingress (to upload file to S3)
+- Custom Origin (HTTP)
+  - ALB
+  - EC2 instance
+  - S3 website
+  - Any HTTP backend you wantz
+
+### CloudFront vs S3 Cross Region Replication
+
+- CloudFront
+  - global edge network
+  - files are cached for a TTL
+  - Great for static content that must be available everywhere
+- S3 Cross Region Replication
+  - **Must be setup for each region you want replication to happen**
+  - Files are updated in near real-time
+  - Read only
+  - Great for dynamic content that needs to be available at low-latency **in few regions**
+
+### Security
+
+- You can restrict who can access your distribution
+- 지역(geo location) 기반으로 액세스 제어 가능
+- 법, 보안 요건 등을 충족하기 위해 사용할 수 있음
+- **S3 bucket “websites” don’t support HTTPS**
+
+### CloudFront Signed URL / Signed Cookies
+
+- Signed URL과 Signed Cookie를 이용해서 앞 단에 인증 과정을 둘 수 있음
+  - 이를 이용해 유료 컨텐츠를 제공하거나 누가 해당 경로에 접근하는지 알고 싶을 때 활용 가능
+- **사용가능한 policies**
+  - URL expiration
+  - IP ranges to access the data from
+  - Trusted signers (which AWS accounts can create signed URL)
+- `Signed URL vs Signed Cookies`
+  - **Signed URL:** access to individual files (one signed URL per file)
+  - **Signed Cookies**: access to multiple files (one signed cookie for many files)
+- `CloudFront Signed URL vs S3 Pre-Signed URL`
+  - **CloudFront Signed URL**
+    - Allow access to a path, no mater the origin
+    - Account wide key-pair, only the root can manage it
+    - Can filter by IP, path, date, expiration
+    - Can leverage caching features
+  - **S3 Pre-Signed URL**
+    - Issue a request as the person who pre-signed the URL
+    - Uses the IAM key of the signing IAM principal
+    - Limited lifetime
