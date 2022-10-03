@@ -182,7 +182,7 @@
   - CNAME, Alias는 보유한 도메인에 hostname을 매핑하고자할 때 선택방안이 될 수 있음.
     아래 차이점이 있으므로 적절한 선택이 필요
   - **CNAME**
-    - Points a hostname to any other hostnaem
+    - Points a hostname to any other hostname
     - 루트 도메인 불가능
   - **Alias**
     - Points a hostname to an **AWS Resource**
@@ -190,7 +190,7 @@
     - Free of charge
     - health check 가능
 - `Alias Records`
-  - Maps a hostnaem to an AWS resource
+  - Maps a hostname to an AWS resource
   - DNS 확장 기능으로 시중의 모든 DNS에서 가능
   - **Automatically reconizes changes** in the resource’s IP Address
   - CNAME과 달리 DNS namespace의 최상위 노드에 연결할 수 있음(Zone Apex) e.g. example.com
