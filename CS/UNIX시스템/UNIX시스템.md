@@ -29,6 +29,10 @@
     - [chkconfig command](#chkconfig-command)
     - [service command](#service-command)
     - [시스템 종료 절차](#시스템-종료-절차)
+  - [사용자 관리](#사용자-관리)
+    - [su command](#su-command)
+    - [sudo command](#sudo-command)
+    - [useradd command](#useradd-command)
 
 ## shell commands
 
@@ -338,3 +342,37 @@
   - 시스템 파일을 잠그고 파일 시스템을 언마운트
   - 버퍼에 있는 데이터를 파일 시스템에 기록(sync)
   - 시스템 호출을 통해 커널에 재부팅 또는 종료를 요청
+
+## 사용자 관리
+
+- 리눅스는 다중 사용자를 지원하는 운영체제로 사용자 계정이 있어야 시스템을 사용할 수 있다.
+  - `사용자명` 또는 `로그인 아이디` 라고도 하며 사용자 계정은 유일한 UID를 가진다.
+- 관리자가 사용자 계정별 접근 권한을 통제할 수 있다.
+  - 계정마다 부여된 권한이 다르며 일반 계정은 자신의 홈 디렉터리를 제외하면 제한된 권한을 가진다.
+  - root계정(UID=0), 시스템 계정도 존재한다.
+
+### su command
+
+- 사용자를 전환하는 명령
+  - e.g. su [-[l]] [username]
+  - `su -l mokhs` 또는 `su - mokhs`는 지정된 사용자의 로그인 쉘을 실행한다.
+  - `su -l`는 루트 사용자로 로그인
+- `su -c 'command'`:  1개의 쉘 명령을 root 계정으로 실행
+
+### sudo command
+
+- root 또는 다른 사용자 권한으로 명령 실행
+  - `/etc/sudoers` 파일의 사용자와 명령 권한에 대한 내용에 기반하여 권한을 검사
+    - `/etc/sudoers`의 기본 문법은 `user MACHINE=COMMANDS`의 형태
+    - e.g `mokhs ALL=/usr/sbin/useradd, /usr/sbin/usermod`
+
+### useradd command
+
+- 사용자 추가 command
+  - e.g. `useradd [options] username`
+    - -c 옵션으로 계정에 대한 설명 추가 가능
+    - `passwd [username]` 명령으로 비밀번호 설정
+  - e.g. `useradd -D [option]`
+    - 해당 계정의 홈 디렉토리에 대한 기본 설정을 보여줌
+    - 다른 옵션을 주어 변경 가능
+    - 기본쉘, 그룹, UID, 계정 만료일 등등을 커스텀 가능
